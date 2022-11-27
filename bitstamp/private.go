@@ -112,16 +112,11 @@ func (c *Conn) PostCancelOrder(id int64) (*response.CancelOrder, error) {
 	return res, nil
 }
 
-func (c *Conn) PostBuyLimitOrder(currencyPair string, amount float64, price float64, limitPrice float64, dailyOrder bool) (*response.BuyLimitOrder, error) {
+func (c *Conn) PostBuyLimitOrder(currencyPair string, amount float64, price float64) (*response.BuyLimitOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
 	v.Set("price", fmt.Sprint(price))
-	if limitPrice > 0 {
-		v.Set("limit_price", fmt.Sprint(limitPrice))
-	}
-	if dailyOrder == true {
-		v.Set("daily_order", fmt.Sprint(dailyOrder))
-	}
+
 	path := fmt.Sprintf("/v2/buy/%s/", currencyPair)
 	b, err := c.Request("POST", path, v, true)
 	if err != nil {
@@ -151,26 +146,23 @@ func (c *Conn) PostBuyMarketOrder(currencyPair string, amount float64) (*respons
 	return res, nil
 }
 
-func (c *Conn) PostSellLimitOrder(currencyPair string, amount float64, price float64, limitPrice float64, dailyOrder bool) (*response.SellLimitOrder, error) {
+func (c *Conn) PostSellLimitOrder(currencyPair string, amount float64, price float64) (*response.SellLimitOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
 	v.Set("price", fmt.Sprint(price))
-	if limitPrice > 0 {
-		v.Set("limit_price", fmt.Sprint(limitPrice))
-	}
-	if dailyOrder == true {
-		v.Set("daily_order", fmt.Sprint(dailyOrder))
-	}
+
 	path := fmt.Sprintf("/v2/sell/%s/", currencyPair)
 	b, err := c.Request("POST", path, v, true)
 	if err != nil {
 		return nil, err
 	}
+
 	res := &response.SellLimitOrder{}
 	err = json.Unmarshal(b, res)
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 

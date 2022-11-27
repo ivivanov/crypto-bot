@@ -10,11 +10,18 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/ivivanov/crypto-socks/bitstamp"
-	bitstampResponse "github.com/ivivanov/crypto-socks/bitstamp/response"
+
+	bs "github.com/ivivanov/crypto-socks/bitstamp"
+	bsresponse "github.com/ivivanov/crypto-socks/bitstamp/response"
+
 	"github.com/ivivanov/crypto-socks/message"
 	"github.com/ivivanov/crypto-socks/response"
 )
+
+type OrdersCreator interface {
+	PostSellLimitOrder(currencyPair string, amount float64, price float64) (*bsresponse.SellLimitOrder, error)
+	PostBuyLimitOrder(currencyPair string, amount float64, price float64) (*bsresponse.BuyLimitOrder, error)
+}
 
 type App struct {
 	addr   string
@@ -23,21 +30,19 @@ type App struct {
 	fee    float64
 
 	// channels
-	interrupt chan os.Signal
-	messageC  chan []byte
-	doneC     chan struct{}
-	tradeC    chan response.MyTrade
+	interruptC chan os.Signal
+	messageC   chan []byte
+	doneC      chan struct{}
+	tradeC     chan *response.MyTrade
 
 	// bitstamp
-	apiConn *bitstamp.Conn
-	secret  *bitstamp.Secret
-	wsToken *bitstampResponse.WebsocketToken
-	wsConn  *websocket.Conn
+	ordersCreator OrdersCreator
+	wsConn        *websocket.Conn
 
 	// messages
-	heartbeatMessage  []byte
-	myOrdersSubscribe []byte
-	myTradesSubscribe []byte
+	heartbeatMessage []byte
+	myOrdersMessage  []byte
+	myTradesMessage  []byte
 
 	trader *Trader
 }
@@ -48,14 +53,14 @@ func NewApp() (*App, error) {
 	pair := "usdtusd"
 	fee := 0.02
 
-	secret, err := bitstamp.GetSecret()
+	secret, err := bs.GetSecret()
 	if err != nil {
 		return nil, err
 	}
 
 	wsUrl := url.URL{Scheme: scheme, Host: addr}
 
-	apiConn, err := bitstamp.NewAuthConn(secret.Key, secret.Secret, secret.CustomerID)
+	apiConn, err := bs.NewAuthConn(secret.Key, secret.Secret, secret.CustomerID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,11 +83,32 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
+	app := &App{
+		addr:   addr,
+		scheme: scheme,
+		pair:   pair,
+		fee:    fee,
+
+		interruptC: make(chan os.Signal, 1),
+		messageC:   make(chan []byte),
+		doneC:      make(chan struct{}),
+		tradeC:     make(chan *response.MyTrade),
+
+		wsConn:        wsConn,
+		ordersCreator: apiConn,
+
+		heartbeatMessage: heartbeatMessage,
+	}
+
+	app.trader = NewTrader(app, app.tradeC)
+
 	myOrders := message.MyOrdersMessage(pair, wsToken.Token, wsToken.UserID)
 	myOrdersMessage, err := json.Marshal(myOrders)
 	if err != nil {
 		return nil, err
 	}
+
+	app.myOrdersMessage = myOrdersMessage
 
 	myTrades := message.MyTradesMessage(pair, wsToken.Token, wsToken.UserID)
 	myTradesMessage, err := json.Marshal(myTrades)
@@ -90,36 +116,14 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	app := &App{
-		addr:   addr,
-		scheme: scheme,
-		pair:   pair,
-		fee:    fee,
-
-		interrupt: make(chan os.Signal, 1),
-		messageC:  make(chan []byte),
-		doneC:     make(chan struct{}),
-		tradeC:    make(chan response.MyTrade),
-
-		apiConn: apiConn,
-		secret:  secret,
-		wsToken: wsToken,
-		wsConn:  wsConn,
-
-		heartbeatMessage:  heartbeatMessage,
-		myOrdersSubscribe: myOrdersMessage,
-		myTradesSubscribe: myTradesMessage,
-	}
-
-	app.trader = NewTrader(app, app.tradeC)
+	app.myTradesMessage = myTradesMessage
 
 	return app, nil
 }
 
 func (app *App) CloseAll() {
-	app.apiConn.Close()
 	app.wsConn.Close()
-	close(app.interrupt)
+	close(app.interruptC)
 	close(app.messageC)
 	close(app.doneC)
 	close(app.tradeC)
@@ -127,7 +131,7 @@ func (app *App) CloseAll() {
 
 func (app *App) Run() error {
 	defer app.CloseAll()
-	signal.Notify(app.interrupt, os.Interrupt)
+	signal.Notify(app.interruptC, os.Interrupt)
 
 	// routine: read
 	go func() {
@@ -152,8 +156,8 @@ func (app *App) Run() error {
 
 	// routine: subscribe
 	go func() {
-		app.messageC <- app.myOrdersSubscribe
-		app.messageC <- app.myTradesSubscribe
+		app.messageC <- app.myOrdersMessage
+		app.messageC <- app.myTradesMessage
 	}()
 
 	// routine: trader
@@ -170,7 +174,7 @@ func (app *App) Run() error {
 			if err != nil {
 				return fmt.Errorf("write: %w", err)
 			}
-		case <-app.interrupt:
+		case <-app.interruptC:
 			log.Println("interrupt")
 
 			// Cleanly close the connection by sending a close message and then

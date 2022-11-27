@@ -7,7 +7,7 @@ import (
 	"github.com/ivivanov/crypto-socks/response"
 )
 
-func ResponseHandler(raw []byte, tradeC chan<- response.MyTrade) {
+func ResponseHandler(raw []byte, tradeC chan<- *response.MyTrade) {
 	baseMsg := response.BaseResponse{}
 	err := json.Unmarshal(raw, &baseMsg)
 	if err != nil {
@@ -44,17 +44,17 @@ func heartbeatHandler(raw []byte) error {
 	return nil
 }
 
-func myTradeHandler(raw []byte, tradeC chan<- response.MyTrade) error {
+func myTradeHandler(raw []byte, tradeC chan<- *response.MyTrade) error {
 	log.Println(string(raw))
 
-	myTrade := response.MyTrade{}
+	myTrade := &response.MyTrade{}
 
-	err := json.Unmarshal(raw, &myTrade)
+	err := json.Unmarshal(raw, myTrade)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Trade-> %s: %s@%s", myTrade.Data.Side, myTrade.Data.Amount, myTrade.Data.Price)
+	log.Printf("Trade-> %v: %v@%v", myTrade.Data.Side, myTrade.Data.Amount, myTrade.Data.Price)
 
 	tradeC <- myTrade
 

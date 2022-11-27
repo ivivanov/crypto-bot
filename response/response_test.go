@@ -38,6 +38,12 @@ func TestMyTrade(t *testing.T) {
 	if expAmount != actAmount {
 		t.Errorf("exp: %v, actual: %v", expAmount, actAmount)
 	}
+
+	var expPrice float64 = 0.99982
+	var actPrice float64 = myTrade.Price()
+	if expPrice != actPrice {
+		t.Errorf("exp: %v, actual: %v", expPrice, actPrice)
+	}
 }
 
 func TestMyOrder(t *testing.T) {

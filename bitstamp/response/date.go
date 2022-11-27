@@ -6,36 +6,36 @@ import (
 	"time"
 )
 
-type date time.Time
-type dateTime time.Time
+type Date time.Time
+type DateTime time.Time
 
 const (
 	dateLayout     = "2006-01-02 15:04:05"
 	dateTimeLayout = "2006-01-02 15:04:05.9999999"
 )
 
-func (d *date) UnmarshalJSON(b []byte) error {
+func (d *Date) UnmarshalJSON(b []byte) error {
 	i, err := strconv.ParseInt(strings.Trim(string(b), "\""), 10, 64)
 	if err != nil {
 		return err
 	}
-	*d = date(time.Unix(i, 0))
+	*d = Date(time.Unix(i, 0))
 	return nil
 }
 
-func (d date) String() string {
+func (d Date) String() string {
 	return time.Time(d).Format(dateTimeLayout)
 }
 
-func (d *dateTime) UnmarshalJSON(b []byte) error {
+func (d *DateTime) UnmarshalJSON(b []byte) error {
 	t, err := time.Parse(`"`+dateTimeLayout+`"`, string(b))
 	if err != nil {
 		return err
 	}
-	*d = dateTime(t)
+	*d = DateTime(t)
 	return nil
 }
 
-func (d dateTime) String() string {
+func (d DateTime) String() string {
 	return time.Time(d).Format(dateTimeLayout)
 }

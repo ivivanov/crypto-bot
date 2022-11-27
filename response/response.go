@@ -19,7 +19,7 @@ type MyTrade struct {
 		OrderID        int    `json:"order_id"`
 		ClientOrderID  string `json:"client_order_id"`
 		Amount         string `json:"amount"`
-		Price          string `json:"pirce"`
+		Price          string `json:"price"`
 		Fee            string `json:"fee"`
 		Side           string `json:"side"`
 		Microtimestamp string `json:"microtimestamp"`

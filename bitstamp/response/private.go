@@ -40,7 +40,7 @@ type UserTransaction struct {
 	Usd      float64  `json:"usd"`
 	XrpEur   float64  `json:"xrp_eur"`
 	Btc      float64  `json:"btc"`
-	DateTime dateTime `json:"datetime"`
+	DateTime DateTime `json:"datetime"`
 	Type     int      `json:"type,string"`
 	Xrp      float64  `json:"xrp,string"`
 	Eur      float64  `json:"eur,string"`
@@ -49,7 +49,7 @@ type UserTransaction struct {
 type OpenOrder struct {
 	Price        float64  `json:"price,string"`
 	CurrencyPair string   `json:"currency_pair"`
-	DateTime     dateTime `json:"datetime"`
+	DateTime     DateTime `json:"datetime"`
 	Amount       float64  `json:"amount,string"`
 	Type         int      `json:"type,string"`
 	ID           int64    `json:"id,string"`
@@ -72,7 +72,7 @@ type BuyLimitOrder struct {
 	Amount   float64  `json:"amount,string"`
 	Type     int      `json:"type,string"`
 	ID       int64    `json:"id,string"`
-	DateTime dateTime `json:"datetime"`
+	DateTime DateTime `json:"datetime"`
 }
 
 type BuyMarketOrder struct {
@@ -80,7 +80,7 @@ type BuyMarketOrder struct {
 	Amount   float64  `json:"amount,string"`
 	Type     int      `json:"type,string"`
 	ID       int64    `json:"id,string"`
-	DateTime dateTime `json:"datetime"`
+	DateTime DateTime `json:"datetime"`
 }
 
 type SellLimitOrder struct {
@@ -88,7 +88,7 @@ type SellLimitOrder struct {
 	Amount   float64  `json:"amount,string"`
 	Type     int      `json:"type,string"`
 	ID       int64    `json:"id,string"`
-	DateTime dateTime `json:"datetime"`
+	DateTime DateTime `json:"datetime"`
 }
 
 type SellMarketOrder struct {
@@ -96,7 +96,7 @@ type SellMarketOrder struct {
 	Amount   float64  `json:"amount,string"`
 	Type     int      `json:"type,string"`
 	ID       int64    `json:"id,string"`
-	DateTime dateTime `json:"datetime"`
+	DateTime DateTime `json:"datetime"`
 }
 
 type WithdrawalRequest struct {

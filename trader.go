@@ -10,10 +10,10 @@ import (
 
 type Trader struct {
 	app    *App
-	tradeC <-chan response.MyTrade
+	tradeC <-chan *response.MyTrade
 }
 
-func NewTrader(app *App, tradeC <-chan response.MyTrade) *Trader {
+func NewTrader(app *App, tradeC <-chan *response.MyTrade) *Trader {
 	return &Trader{
 		app:    app,
 		tradeC: tradeC,
@@ -24,7 +24,14 @@ func NewTrader(app *App, tradeC <-chan response.MyTrade) *Trader {
 func (t *Trader) Start() {
 	for {
 		trade := <-t.tradeC
-		t.PostNewTrade(trade)
+
+		resp, err := t.PostCounterTrade(trade)
+		log.Printf("Counter trade: %#v", resp)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		log.Print("Put to sleep trader for 30 sec")
 		time.Sleep(30 * time.Second)
 	}
@@ -43,28 +50,26 @@ func (t *Trader) CalculateBreakevenPrice(price float64, isBuyPrice bool) float64
 	return math.Round(buyPrice*float64(precision)) / float64(precision)
 }
 
-func (t *Trader) PostNewTrade(trade response.MyTrade) {
+func (t *Trader) PostCounterTrade(trade *response.MyTrade) (interface{}, error) {
 	newAmount := trade.Amount() + trade.Fee()
-	
+
+	var resp interface{}
+	var err error
+
 	switch trade.Data.Side {
 	case "buy":
 		sellPrice := t.CalculateBreakevenPrice(trade.Price(), true)
 		log.Print(t.app.pair, newAmount, sellPrice, sellPrice)
-		resp, err := t.app.apiConn.PostSellLimitOrder(t.app.pair, newAmount, sellPrice, sellPrice, false)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		log.Print(resp)
+		resp, err = t.app.ordersCreator.PostSellLimitOrder(t.app.pair, newAmount, sellPrice)
 	case "sell":
 		buyPrice := t.CalculateBreakevenPrice(trade.Price(), false)
 		log.Print(t.app.pair, newAmount, buyPrice, buyPrice)
-
-		resp, err := t.app.apiConn.PostBuyLimitOrder(t.app.pair, newAmount, buyPrice, buyPrice, false)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		log.Print(resp)
+		resp, err = t.app.ordersCreator.PostBuyLimitOrder(t.app.pair, newAmount, buyPrice)
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }

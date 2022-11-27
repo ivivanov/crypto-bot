@@ -23,7 +23,7 @@ type Transaction struct {
 	Type   int     `json:"type,string"`
 	Price  float64 `json:"price,string"`
 	Tid    int64   `json:"tid,string"`
-	Date   date    `json:"date"`
+	Date   Date    `json:"date"`
 }
 
 type TradingPairInfo struct {
