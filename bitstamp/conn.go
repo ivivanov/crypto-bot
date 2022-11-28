@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ivivanov/crypto-socks/bitstamp/response"
+	"github.com/ivivanov/crypto-bot/bitstamp/response"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/ivivanov/crypto-socks/response"
+	"github.com/ivivanov/crypto-bot/response"
 )
 
 func ResponseHandler(raw []byte, tradeC chan<- *response.MyTrade) {

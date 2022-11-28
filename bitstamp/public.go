@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/ivivanov/crypto-socks/bitstamp/response"
+	"github.com/ivivanov/crypto-bot/bitstamp/response"
 )
 
 func (c *Conn) GetTicker(currencyPair string) (*response.Ticker, error) {

@@ -11,23 +11,21 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	bs "github.com/ivivanov/crypto-socks/bitstamp"
-	bsresponse "github.com/ivivanov/crypto-socks/bitstamp/response"
+	bs "github.com/ivivanov/crypto-bot/bitstamp"
+	bsre "github.com/ivivanov/crypto-bot/bitstamp/response"
 
-	"github.com/ivivanov/crypto-socks/message"
-	"github.com/ivivanov/crypto-socks/response"
+	"github.com/ivivanov/crypto-bot/message"
+	"github.com/ivivanov/crypto-bot/response"
 )
 
 type OrdersCreator interface {
-	PostSellLimitOrder(currencyPair string, amount float64, price float64) (*bsresponse.SellLimitOrder, error)
-	PostBuyLimitOrder(currencyPair string, amount float64, price float64) (*bsresponse.BuyLimitOrder, error)
+	PostSellLimitOrder(currencyPair string, amount float64, price float64) (*bsre.SellLimitOrder, error)
+	PostBuyLimitOrder(currencyPair string, amount float64, price float64) (*bsre.BuyLimitOrder, error)
 }
 
 type App struct {
-	addr   string
-	scheme string
-	pair   string
-	fee    float64
+	pair string
+	fee  float64
 
 	// channels
 	interruptC chan os.Signal
@@ -48,19 +46,11 @@ type App struct {
 }
 
 func NewApp() (*App, error) {
-	addr := "ws.bitstamp.net"
-	scheme := "wss"
-	pair := "usdtusd"
-	fee := 0.02
+	ParseFlags()
 
-	secret, err := bs.GetSecret()
-	if err != nil {
-		return nil, err
-	}
+	wsUrl := url.URL{Scheme: *wsSchemeFlag, Host: *wsAddrFlag}
 
-	wsUrl := url.URL{Scheme: scheme, Host: addr}
-
-	apiConn, err := bs.NewAuthConn(secret.Key, secret.Secret, secret.CustomerID)
+	apiConn, err := bs.NewAuthConn(*apiKeyFlag, *apiSecretFlag, *customerIDFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -84,10 +74,8 @@ func NewApp() (*App, error) {
 	}
 
 	app := &App{
-		addr:   addr,
-		scheme: scheme,
-		pair:   pair,
-		fee:    fee,
+		pair: *pairFlag,
+		fee:  *feeFlag,
 
 		interruptC: make(chan os.Signal, 1),
 		messageC:   make(chan []byte),
@@ -102,7 +90,7 @@ func NewApp() (*App, error) {
 
 	app.trader = NewTrader(app, app.tradeC)
 
-	myOrders := message.MyOrdersMessage(pair, wsToken.Token, wsToken.UserID)
+	myOrders := message.MyOrdersMessage(app.pair, wsToken.Token, wsToken.UserID)
 	myOrdersMessage, err := json.Marshal(myOrders)
 	if err != nil {
 		return nil, err
@@ -110,7 +98,7 @@ func NewApp() (*App, error) {
 
 	app.myOrdersMessage = myOrdersMessage
 
-	myTrades := message.MyTradesMessage(pair, wsToken.Token, wsToken.UserID)
+	myTrades := message.MyTradesMessage(app.pair, wsToken.Token, wsToken.UserID)
 	myTradesMessage, err := json.Marshal(myTrades)
 	if err != nil {
 		return nil, err

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	bsresponse "github.com/ivivanov/crypto-socks/bitstamp/response"
-	"github.com/ivivanov/crypto-socks/response"
+	bsresponse "github.com/ivivanov/crypto-bot/bitstamp/response"
+	"github.com/ivivanov/crypto-bot/response"
 )
 
 func TestBreakEvenSellPrice(t *testing.T) {

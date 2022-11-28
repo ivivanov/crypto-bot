@@ -4,9 +4,10 @@ import (
 	"log"
 	"math"
 
-	"github.com/ivivanov/crypto-socks/response"
+	"github.com/ivivanov/crypto-bot/response"
 )
 
+// https://docs.google.com/spreadsheets/d/1OqDC3QNYZoLhXN1BwxTOxbgOBTo7aTbWj87HgYxSLfQ/edit?usp=sharing
 // The idea is to buy/sell @ breakeven price with 0.02% fee.
 //
 // 1) bought USDT:
