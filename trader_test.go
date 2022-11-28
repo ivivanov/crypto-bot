@@ -11,40 +11,38 @@ import (
 )
 
 func TestBreakEvenSellPrice(t *testing.T) {
-	trader := Trader{
-		app: &App{
-			fee: 0.02,
-		},
-	}
-	buyPrice := 0.99954
-	expSellPrice := 0.99974
-	actualSellPrice := trader.CalculateBreakevenPrice(buyPrice, true)
+	trader := Trader{}
+	buyPrice := 0.99944
+	amount := 50.00000
+	fee := 0.01499
+	expSellPrice := 1.0000396
+	expSellPriceRounded := round5dec(expSellPrice)
+	actualSellPrice := trader.CalculateBreakevenPrice(buyPrice, amount, fee, true)
 
 	if buyPrice > actualSellPrice {
 		t.Error("must: buy price < sell price")
 	}
 
-	if expSellPrice != actualSellPrice {
-		t.Errorf("exp: %v actual: %v", expSellPrice, actualSellPrice)
+	if expSellPriceRounded != actualSellPrice {
+		t.Errorf("exp: %v actual: %v", expSellPriceRounded, actualSellPrice)
 	}
 }
 
 func TestBreakEvenBuyPrice(t *testing.T) {
-	trader := Trader{
-		app: &App{
-			fee: 0.02,
-		},
-	}
-	sellPrice := 0.99954
-	expBuyPrice := 0.99934
-	actualBuyPrice := trader.CalculateBreakevenPrice(sellPrice, false)
+	trader := Trader{}
+	sellPrice := 0.99938
+	amount := 50.00000
+	fee := 0.01499
+	expBuyPrice := 0.9987804
+	expBytPriceRounded := round5dec(expBuyPrice)
+	actualBuyPrice := trader.CalculateBreakevenPrice(sellPrice, amount, fee, false)
 
 	if sellPrice < actualBuyPrice {
 		t.Error("must: sell price > buy price")
 	}
 
-	if expBuyPrice != actualBuyPrice {
-		t.Errorf("exp: %v actual: %v", expBuyPrice, actualBuyPrice)
+	if expBytPriceRounded != actualBuyPrice {
+		t.Errorf("exp: %v actual: %v", expBytPriceRounded, actualBuyPrice)
 	}
 }
 
@@ -59,16 +57,11 @@ func TestPostCounterTrade(t *testing.T) {
 	myTradeJson := `
 	{
 		"data": {
-			"id": 256568732,
 			"amount": "15.00000",
 			"price": "0.99982",
-			"microtimestamp": "1669538134992000",
 			"fee": "0.003",
-			"order_id": 1559359938404352,
 			"side": "buy"
-		},
-		"channel": "private-my_trades_usdtusd-1106202",
-		"event": "trade"
+		}
 	}
 	`
 
@@ -86,9 +79,14 @@ func TestPostCounterTrade(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expAmount := myTrade.Amount() + myTrade.Fee()
+	expAmount := 15.00000
 	if sellResp.Amount != expAmount {
 		t.Errorf("exp: %v, actual: %v", expAmount, sellResp.Amount)
+	}
+
+	expPrice := 1.00022
+	if sellResp.Price != expPrice {
+		t.Errorf("exp: %v, actual: %v", expPrice, sellResp.Price)
 	}
 }
 
@@ -104,6 +102,7 @@ func (ocm *OrdersCreatorMock) PostSellLimitOrder(currencyPair string, amount flo
 		DateTime: bsresponse.DateTime(time.Now()),
 	}, nil
 }
+
 func (ocm *OrdersCreatorMock) PostBuyLimitOrder(currencyPair string, amount float64, price float64) (*bsresponse.BuyLimitOrder, error) {
 	return nil, nil
 }

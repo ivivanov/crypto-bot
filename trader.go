@@ -3,10 +3,35 @@ package main
 import (
 	"log"
 	"math"
-	"time"
 
 	"github.com/ivivanov/crypto-socks/response"
 )
+
+// The idea is to buy/sell @ breakeven price with 0.02% fee.
+//
+// 1) bought USDT:
+// buy USDT		buy price	USD before fee	fee			total USD paid
+// 50.00000		0.99944		49.97200		0.01499		49.98699
+//
+// create new sell order:
+// sell USDT	sell price	USD base		fee			exp USD gain
+// 50.00000		1.0000396	50.00198		0.01499		49.98699
+//
+// total USD paid = fee + USD before fee
+// USD base = total USD paid + fee
+// sell price = USD base / sell USDT
+//
+// 2) sold USDT:
+// sell USDT	sell price	USD before fee	fee			total USD gain
+// 50.00000		0.99938		49.96900		0.01499		49.95401
+//
+// create new buy order:
+// buy USDT		buy price	USD base		fee			exp USD paid
+// 50.00000		0.9987804	49.93902		0.01499		49.95401
+//
+// total USD gain = -fee + USD before fee
+// USD base = total USD gain - fee
+// buy price = USD base / buy USDT
 
 type Trader struct {
 	app    *App
@@ -32,39 +57,40 @@ func (t *Trader) Start() {
 			log.Fatal(err)
 		}
 
-		log.Print("Put to sleep trader for 30 sec")
-		time.Sleep(30 * time.Second)
+		// log.Print("Put to sleep trader for 30 sec")
+		// time.Sleep(30 * time.Second)
 	}
 }
 
 // Returns round number up to 5 decimal precision
-func (t *Trader) CalculateBreakevenPrice(price float64, isBuyPrice bool) float64 {
-	precision := 100_000
+func (t *Trader) CalculateBreakevenPrice(price, amount, fee float64, isBuyPrice bool) float64 {
+	if isBuyPrice { // start with buy USDT
+		totalUsdPaid := price*amount + fee        // 49.98699
+		usdBaseForSellPrice := totalUsdPaid + fee // 50.00198
+		sellPrice := usdBaseForSellPrice / amount // 1.0000396
 
-	if isBuyPrice {
-		sellPrice := price + price*t.app.fee/100
-		return math.Round(sellPrice*float64(precision)) / float64(precision)
+		return round5dec(sellPrice) // 1.00004
 	}
 
-	buyPrice := price - price*t.app.fee/100
-	return math.Round(buyPrice*float64(precision)) / float64(precision)
+	// else -> start with sell USDT
+	totalUsdGain := price*amount - fee
+	usdBaseForBuyPrice := totalUsdGain - fee
+	buyPrice := usdBaseForBuyPrice / amount
+
+	return round5dec(buyPrice)
 }
 
 func (t *Trader) PostCounterTrade(trade *response.MyTrade) (interface{}, error) {
-	newAmount := trade.Amount() + trade.Fee()
-
 	var resp interface{}
 	var err error
 
 	switch trade.Data.Side {
 	case "buy":
-		sellPrice := t.CalculateBreakevenPrice(trade.Price(), true)
-		log.Print(t.app.pair, newAmount, sellPrice, sellPrice)
-		resp, err = t.app.ordersCreator.PostSellLimitOrder(t.app.pair, newAmount, sellPrice)
+		sellPrice := t.CalculateBreakevenPrice(trade.Price(), trade.Amount(), trade.Fee(), true)
+		resp, err = t.app.ordersCreator.PostSellLimitOrder(t.app.pair, trade.Amount(), sellPrice)
 	case "sell":
-		buyPrice := t.CalculateBreakevenPrice(trade.Price(), false)
-		log.Print(t.app.pair, newAmount, buyPrice, buyPrice)
-		resp, err = t.app.ordersCreator.PostBuyLimitOrder(t.app.pair, newAmount, buyPrice)
+		buyPrice := t.CalculateBreakevenPrice(trade.Price(), trade.Amount(), trade.Fee(), false)
+		resp, err = t.app.ordersCreator.PostBuyLimitOrder(t.app.pair, trade.Amount(), buyPrice)
 	}
 
 	if err != nil {
@@ -72,4 +98,9 @@ func (t *Trader) PostCounterTrade(trade *response.MyTrade) (interface{}, error) 
 	}
 
 	return resp, nil
+}
+
+func round5dec(num float64) float64 {
+	precision := 100_000
+	return math.Round(num*float64(precision)) / float64(precision)
 }

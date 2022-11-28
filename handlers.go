@@ -45,8 +45,6 @@ func heartbeatHandler(raw []byte) error {
 }
 
 func myTradeHandler(raw []byte, tradeC chan<- *response.MyTrade) error {
-	log.Println(string(raw))
-
 	myTrade := &response.MyTrade{}
 
 	err := json.Unmarshal(raw, myTrade)
@@ -54,7 +52,7 @@ func myTradeHandler(raw []byte, tradeC chan<- *response.MyTrade) error {
 		return err
 	}
 
-	log.Printf("Trade-> %v: %v@%v", myTrade.Data.Side, myTrade.Data.Amount, myTrade.Data.Price)
+	log.Printf("Trade-> %v: %v @ %v", myTrade.Data.Side, myTrade.Data.Amount, myTrade.Data.Price)
 
 	tradeC <- myTrade
 
@@ -62,8 +60,6 @@ func myTradeHandler(raw []byte, tradeC chan<- *response.MyTrade) error {
 }
 
 func myOrderHandler(raw []byte, event string) error {
-	log.Println(string(raw))
-
 	myOrder := response.MyOrder{}
 
 	err := json.Unmarshal(raw, &myOrder)
@@ -71,7 +67,7 @@ func myOrderHandler(raw []byte, event string) error {
 		return err
 	}
 
-	log.Printf("Order->%s-> %s: %s@%s", event, myOrder.GetOrderType(), myOrder.Data.AmountStr, myOrder.Data.PriceStr)
+	log.Printf("Order->%s-> %s: %s @ %s", event, myOrder.GetOrderType(), myOrder.Data.AmountStr, myOrder.Data.PriceStr)
 
 	return nil
 }
