@@ -24,8 +24,8 @@ type OrdersCreator interface {
 }
 
 type App struct {
-	pair string
-	fee  float64
+	pair   string
+	profit float64
 
 	// channels
 	interruptC chan os.Signal
@@ -74,8 +74,8 @@ func NewApp() (*App, error) {
 	}
 
 	app := &App{
-		pair: *pairFlag,
-		fee:  *feeFlag,
+		pair:   *pairFlag,
+		profit: *profitFlag,
 
 		interruptC: make(chan os.Signal, 1),
 		messageC:   make(chan []byte),

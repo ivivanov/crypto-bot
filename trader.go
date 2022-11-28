@@ -15,11 +15,12 @@ import (
 // 50.00000		0.99944		49.97200		0.01499		49.98699
 //
 // create new sell order:
-// sell USDT	sell price	USD base		fee			exp USD gain
-// 50.00000		1.0000396	50.00198		0.01499		49.98699
+// sell USDT	sell price	USD base		fee			exp USD gain	profit
+// 50.00000		1.0000396	50.00198		0.01499		49.98699		0.0%
 //
 // total USD paid = fee + USD before fee
 // USD base = total USD paid + fee
+// USD base with profit = USD base + USD base * profit
 // sell price = USD base / sell USDT
 //
 // 2) sold USDT:
@@ -27,11 +28,12 @@ import (
 // 50.00000		0.99938		49.96900		0.01499		49.95401
 //
 // create new buy order:
-// buy USDT		buy price	USD base		fee			exp USD paid
-// 50.00000		0.9987804	49.93902		0.01499		49.95401
+// buy USDT		buy price	USD base		fee			exp USD paid	profit
+// 50.00000		0.9987804	49.93902		0.01499		49.95401		0.0%
 //
 // total USD gain = -fee + USD before fee
 // USD base = total USD gain - fee
+// USD base with profit = USD base - USD base * profit
 // buy price = USD base / buy USDT
 
 type Trader struct {
@@ -64,19 +66,21 @@ func (t *Trader) Start() {
 }
 
 // Returns round number up to 5 decimal precision
-func (t *Trader) CalculateBreakevenPrice(price, amount, fee float64, isBuyPrice bool) float64 {
+func (t *Trader) CalculatePrice(price, amount, fee float64, isBuyPrice bool) float64 {
 	if isBuyPrice { // start with buy USDT
-		totalUsdPaid := price*amount + fee        // 49.98699
-		usdBaseForSellPrice := totalUsdPaid + fee // 50.00198
-		sellPrice := usdBaseForSellPrice / amount // 1.0000396
+		totalUsdPaid := price*amount + fee
+		usdBaseSell := totalUsdPaid + fee
+		usdBaseSellProfit := usdBaseSell + (usdBaseSell*t.app.profit)/100
+		sellPrice := usdBaseSellProfit / amount
 
-		return round5dec(sellPrice) // 1.00004
+		return round5dec(sellPrice)
 	}
 
 	// else -> start with sell USDT
 	totalUsdGain := price*amount - fee
-	usdBaseForBuyPrice := totalUsdGain - fee
-	buyPrice := usdBaseForBuyPrice / amount
+	usdBaseBuy := totalUsdGain - fee
+	usdBaseBuyProfit := usdBaseBuy - (usdBaseBuy*t.app.profit)/100
+	buyPrice := usdBaseBuyProfit / amount
 
 	return round5dec(buyPrice)
 }
@@ -87,10 +91,10 @@ func (t *Trader) PostCounterTrade(trade *response.MyTrade) (interface{}, error) 
 
 	switch trade.Data.Side {
 	case "buy":
-		sellPrice := t.CalculateBreakevenPrice(trade.Price(), trade.Amount(), trade.Fee(), true)
+		sellPrice := t.CalculatePrice(trade.Price(), trade.Amount(), trade.Fee(), true)
 		resp, err = t.app.ordersCreator.PostSellLimitOrder(t.app.pair, trade.Amount(), sellPrice)
 	case "sell":
-		buyPrice := t.CalculateBreakevenPrice(trade.Price(), trade.Amount(), trade.Fee(), false)
+		buyPrice := t.CalculatePrice(trade.Price(), trade.Amount(), trade.Fee(), false)
 		resp, err = t.app.ordersCreator.PostBuyLimitOrder(t.app.pair, trade.Amount(), buyPrice)
 	}
 

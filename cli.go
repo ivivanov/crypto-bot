@@ -15,7 +15,7 @@ var (
 	wsAddrFlag     *string
 	wsSchemeFlag   *string
 	pairFlag       *string
-	feeFlag        *float64
+	profitFlag     *float64
 )
 
 func ParseFlags() {
@@ -30,7 +30,7 @@ func ParseFlags() {
 	wsAddrFlag = flag.String("addr", "ws.bitstamp.net", "websocket address")
 	wsSchemeFlag = flag.String("scheme", "wss", "websocket scheme")
 	pairFlag = flag.String("pair", "usdtusd", "trading pair")
-	feeFlag = flag.Float64("fee", 0.02, "maker fee")
+	profitFlag = flag.Float64("profit", 0.0, "profit applied on each trade")
 
 	flag.Parse()
 	flag.VisitAll(func(f *flag.Flag) {

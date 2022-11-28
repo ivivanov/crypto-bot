@@ -11,13 +11,18 @@ import (
 )
 
 func TestBreakEvenSellPrice(t *testing.T) {
-	trader := Trader{}
+	trader := Trader{
+		app: &App{
+			profit: 0.0,
+		},
+	}
+
 	buyPrice := 0.99944
 	amount := 50.00000
 	fee := 0.01499
 	expSellPrice := 1.0000396
 	expSellPriceRounded := round5dec(expSellPrice)
-	actualSellPrice := trader.CalculateBreakevenPrice(buyPrice, amount, fee, true)
+	actualSellPrice := trader.CalculatePrice(buyPrice, amount, fee, true)
 
 	if buyPrice > actualSellPrice {
 		t.Error("must: buy price < sell price")
@@ -29,27 +34,77 @@ func TestBreakEvenSellPrice(t *testing.T) {
 }
 
 func TestBreakEvenBuyPrice(t *testing.T) {
-	trader := Trader{}
+	trader := Trader{
+		app: &App{
+			profit: 0.0,
+		},
+	}
+
 	sellPrice := 0.99938
 	amount := 50.00000
 	fee := 0.01499
 	expBuyPrice := 0.9987804
-	expBytPriceRounded := round5dec(expBuyPrice)
-	actualBuyPrice := trader.CalculateBreakevenPrice(sellPrice, amount, fee, false)
+	expBuyPriceRounded := round5dec(expBuyPrice)
+	actualBuyPrice := trader.CalculatePrice(sellPrice, amount, fee, false)
 
 	if sellPrice < actualBuyPrice {
 		t.Error("must: sell price > buy price")
 	}
 
-	if expBytPriceRounded != actualBuyPrice {
-		t.Errorf("exp: %v actual: %v", expBytPriceRounded, actualBuyPrice)
+	if expBuyPriceRounded != actualBuyPrice {
+		t.Errorf("exp: %v actual: %v", expBuyPriceRounded, actualBuyPrice)
+	}
+}
+
+func TestSellPriceWithProfit(t *testing.T) {
+	trader := Trader{
+		app: &App{
+			profit: 0.01,
+		},
+	}
+
+	buyPrice := 0.99982
+	amount := 15.00000
+	fee := 0.00300
+	expSellPrice := 1.000320002
+	expSellPriceRounded := round5dec(expSellPrice)
+	actualSellPrice := trader.CalculatePrice(buyPrice, amount, fee, true)
+
+	if buyPrice > actualSellPrice {
+		t.Error("must: buy price < sell price")
+	}
+
+	if expSellPriceRounded != actualSellPrice {
+		t.Errorf("exp: %v actual: %v", expSellPriceRounded, actualSellPrice)
+	}
+}
+
+func TestBuyPriceWithProfit(t *testing.T) {
+	trader := Trader{
+		app: &App{
+			profit: 0.01,
+		},
+	}
+
+	sellPrice := 0.99938
+	amount := 50.00000
+	fee := 0.01499
+	expBuyPrice := 0.99868
+	expBuyPriceRounded := round5dec(expBuyPrice)
+	actualBuyPrice := trader.CalculatePrice(sellPrice, amount, fee, false)
+
+	if sellPrice < actualBuyPrice {
+		t.Error("must: sell price > buy price")
+	}
+
+	if expBuyPriceRounded != actualBuyPrice {
+		t.Errorf("exp: %v actual: %v", expBuyPriceRounded, actualBuyPrice)
 	}
 }
 
 func TestPostCounterTrade(t *testing.T) {
 	trader := Trader{
 		app: &App{
-			fee:           0.02,
 			ordersCreator: &OrdersCreatorMock{},
 		},
 	}
