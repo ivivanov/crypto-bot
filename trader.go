@@ -53,15 +53,11 @@ func (t *Trader) Start() {
 	for {
 		trade := <-t.tradeC
 
-		resp, err := t.PostCounterTrade(trade)
-		log.Printf("Counter trade: %#v", resp)
+		_, err := t.PostCounterTrade(trade)
 
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		// log.Print("Put to sleep trader for 30 sec")
-		// time.Sleep(30 * time.Second)
 	}
 }
 

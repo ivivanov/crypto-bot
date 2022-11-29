@@ -1,5 +1,5 @@
 secret.json
-.env
+*.env
 
 # Binaries for programs and plugins
 *.exe

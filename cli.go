@@ -40,4 +40,6 @@ func ParseFlags() {
 			os.Exit(1)
 		}
 	})
+
+	log.Printf("Run with profit: %v%%", *profitFlag)
 }
