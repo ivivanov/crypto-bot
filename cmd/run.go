@@ -32,5 +32,5 @@ func init() {
 
 	runCmd.Flags().StringVar(&wsAddr, "ws-addr", "ws.bitstamp.net", "Bitstamp websocket address")
 	runCmd.Flags().StringVar(&wsScheme, "ws-scheme", "wss", "Bitstamp websocket scheme")
-	runCmd.Flags().Float64Var(&profit, "profit", 0.0, "Profit applied on each trade")
+	runCmd.Flags().Float64Var(&profit, "profit", 0.01, "Profit applied on each trade")
 }

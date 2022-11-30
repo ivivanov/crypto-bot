@@ -29,7 +29,7 @@ func (p *Preparer) OpenBuyOrders(bank, price, grid, orders float64) error {
 			return err
 		}
 
-		log.Printf("%#v", resp)
+		log.Printf("Order-created-> %v: %v @ %v", "buy", resp.Amount, resp.Price)
 	}
 
 	return nil

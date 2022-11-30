@@ -7,7 +7,7 @@ import (
 	"github.com/ivivanov/crypto-bot/response"
 )
 
-func ResponseHandler(raw []byte, tradeC chan<- *response.MyTrade) {
+func MessageRouter(raw []byte, tradeC chan<- *response.MyTrade) {
 	baseMsg := response.BaseResponse{}
 	err := json.Unmarshal(raw, &baseMsg)
 	if err != nil {
@@ -51,6 +51,10 @@ func myTradeHandler(raw []byte, tradeC chan<- *response.MyTrade) error {
 	if err != nil {
 		return err
 	}
+
+	// if helper.GetAccountFrom(myTrade.Data.ClientOrderID) !=  {
+
+	// }
 
 	log.Printf("Trade-> %v: %v @ %v", myTrade.Data.Side, myTrade.Data.Amount, myTrade.Data.Price)
 

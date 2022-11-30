@@ -36,7 +36,7 @@ type Bot struct {
 
 	// bitstamp
 	ordersCreator OrdersCreator
-	wsConn        *websocket.Conn
+	wsUrl         string
 
 	// messages
 	heartbeatMessage []byte
@@ -69,14 +69,6 @@ func NewBot(
 		return nil, err
 	}
 
-	log.Printf("connecting to %s", wsUrl.String())
-	wsConn, httpResp, err := websocket.DefaultDialer.Dial(wsUrl.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("dial ws: %w", err)
-	}
-
-	log.Printf("dial status: %v", httpResp.StatusCode)
-
 	heartbeatMessage, err := message.NewHeartbeat()
 	if err != nil {
 		return nil, err
@@ -92,8 +84,8 @@ func NewBot(
 		doneC:      make(chan struct{}),
 		tradeC:     make(chan *response.MyTrade),
 
-		wsConn:        wsConn,
 		ordersCreator: apiConn,
+		wsUrl:         wsUrl.String(),
 
 		heartbeatMessage: heartbeatMessage,
 	}
@@ -123,7 +115,6 @@ func NewBot(
 }
 
 func (b *Bot) CloseAll() {
-	b.wsConn.Close()
 	close(b.interruptC)
 	close(b.messageC)
 	close(b.doneC)
@@ -134,16 +125,26 @@ func (b *Bot) Run() error {
 	defer b.CloseAll()
 	signal.Notify(b.interruptC, os.Interrupt)
 
+	log.Printf("connecting to %s", b.wsUrl)
+	wsConn, httpResp, err := websocket.DefaultDialer.Dial(b.wsUrl, nil)
+	if err != nil {
+		return fmt.Errorf("dial ws: %w", err)
+	}
+
+	defer wsConn.Close()
+
+	log.Printf("dial status: %v", httpResp.StatusCode)
+
 	// routine: read
 	go func() {
 		for {
-			_, msg, err := b.wsConn.ReadMessage()
+			_, msg, err := wsConn.ReadMessage()
 			if err != nil {
 				log.Fatal("read:", err)
 				return
 			}
 
-			ResponseHandler(msg, b.tradeC)
+			MessageRouter(msg, b.tradeC)
 		}
 	}()
 
@@ -171,7 +172,7 @@ func (b *Bot) Run() error {
 	for {
 		select {
 		case msg := <-b.messageC:
-			err := b.wsConn.WriteMessage(websocket.TextMessage, msg)
+			err := wsConn.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
 				return fmt.Errorf("write: %w", err)
 			}
@@ -180,7 +181,7 @@ func (b *Bot) Run() error {
 
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
-			err := b.wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+			err := wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
 				return fmt.Errorf("write close: %w", err)
 			}
