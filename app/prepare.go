@@ -24,7 +24,6 @@ func (p *Preparer) OpenBuyOrders(bank, price, grid, orders float64) error {
 		clientOrderID := helper.GetRnClientOrderID(p.bot.account)
 		currPrice = helper.Round5dec(currPrice - currPrice*grid/100)
 
-		// log.Println(i, id, p.bot.pair, amount, currPrice)
 		resp, err := p.bot.ordersCreator.PostBuyLimitOrder(p.bot.pair, clientOrderID, amount, currPrice)
 		if err != nil {
 			return err

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -25,4 +26,13 @@ func Round2dec(num float64) float64 {
 
 func GetRnClientOrderID(account string) string {
 	return fmt.Sprintf("%v-%v", account, time.Now().UnixMicro())
+}
+
+func GetAccountFrom(clientOrderID string) (string, error) {
+	split := strings.Split(clientOrderID, "-")
+	if len(split) != 2 {
+		return "", fmt.Errorf("invalid client order id: %v", clientOrderID)
+	}
+
+	return split[0], nil
 }

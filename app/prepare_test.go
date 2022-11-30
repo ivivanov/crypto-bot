@@ -2,10 +2,10 @@ package app
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	bsresponse "github.com/ivivanov/crypto-bot/bitstamp/response"
+	"github.com/ivivanov/crypto-bot/helper"
 )
 
 func TestOpenBuyOrders(t *testing.T) {
@@ -68,7 +68,11 @@ func (ocm *PrepareOrdersCreatorMock) PostBuyLimitOrder(currencyPair, clientOrder
 		return nil, fmt.Errorf("exp: %v, act: %v", ocm.expCurrencyPair, currencyPair)
 	}
 
-	account := strings.Split(clientOrderID, "-")[0]
+	account, err := helper.GetAccountFrom(clientOrderID)
+	if err != nil {
+		return nil, err
+	}
+	
 	if ocm.expAccount != account {
 		return nil, fmt.Errorf("exp: %v, act: %v", ocm.expAccount, account)
 	}
@@ -76,8 +80,8 @@ func (ocm *PrepareOrdersCreatorMock) PostBuyLimitOrder(currencyPair, clientOrder
 	ocm.i++
 
 	return &bsresponse.BuyLimitOrder{
-		Price: price,
-		Amount: amount,
+		Price:         price,
+		Amount:        amount,
 		ClientOrderID: clientOrderID,
 	}, nil
 }
