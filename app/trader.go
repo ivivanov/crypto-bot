@@ -91,14 +91,14 @@ func (t *Trader) PostCounterTrade(trade *response.MyTrade) (interface{}, error) 
 	switch trade.Data.Side {
 	case "buy":
 		sellPrice := t.CalculatePrice(trade.Price(), trade.Amount(), trade.Fee(), true)
-		resp, err = t.bot.ordersCreator.PostSellLimitOrder(t.bot.pair, helper.GetRnClientOrderID(t.bot.account), trade.Amount(), sellPrice)
+		resp, err = t.bot.limitOrdersCreator.PostSellLimitOrder(t.bot.pair, helper.GetRnClientOrderID(t.bot.account), trade.Amount(), sellPrice)
 		_, ok := resp.(*bsresponse.SellLimitOrder)
 		if !ok {
 			return nil, fmt.Errorf("unsuccessful post sell limit order")
 		}
 	case "sell":
 		buyPrice := t.CalculatePrice(trade.Price(), trade.Amount(), trade.Fee(), false)
-		resp, err = t.bot.ordersCreator.PostBuyLimitOrder(t.bot.pair, helper.GetRnClientOrderID(t.bot.account), trade.Amount(), buyPrice)
+		resp, err = t.bot.limitOrdersCreator.PostBuyLimitOrder(t.bot.pair, helper.GetRnClientOrderID(t.bot.account), trade.Amount(), buyPrice)
 		_, ok := resp.(*bsresponse.BuyLimitOrder)
 		if !ok {
 			return nil, fmt.Errorf("unsuccessful post buy limit order")

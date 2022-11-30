@@ -18,7 +18,7 @@ import (
 	"github.com/ivivanov/crypto-bot/response"
 )
 
-type OrdersCreator interface {
+type LimitOrdersCreator interface {
 	PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.SellLimitOrder, error)
 	PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.BuyLimitOrder, error)
 }
@@ -35,14 +35,15 @@ type Bot struct {
 	tradeC     chan *response.MyTrade
 
 	// bitstamp
-	ordersCreator OrdersCreator
-	wsUrl         string
+	limitOrdersCreator LimitOrdersCreator
+	wsUrl              string
 
 	// messages
 	heartbeatMessage []byte
 	myOrdersMessage  []byte
 	myTradesMessage  []byte
 
+	router *Router
 	trader *Trader
 }
 
@@ -84,10 +85,14 @@ func NewBot(
 		doneC:      make(chan struct{}),
 		tradeC:     make(chan *response.MyTrade),
 
-		ordersCreator: apiConn,
-		wsUrl:         wsUrl.String(),
+		limitOrdersCreator: apiConn,
+		wsUrl:              wsUrl.String(),
 
 		heartbeatMessage: heartbeatMessage,
+	}
+	bot.router, err = NewRouter(bot, bot.tradeC)
+	if err != nil {
+		return nil, err
 	}
 
 	bot.trader, err = NewTrader(bot, bot.tradeC)
@@ -144,7 +149,7 @@ func (b *Bot) Run() error {
 				return
 			}
 
-			MessageRouter(msg, b.tradeC)
+			b.router.Do(msg)
 		}
 	}()
 

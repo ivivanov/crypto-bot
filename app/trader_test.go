@@ -106,7 +106,7 @@ func TestBuyPriceWithProfit(t *testing.T) {
 func TestPostCounterTrade(t *testing.T) {
 	trader := Trader{
 		bot: &Bot{
-			ordersCreator: &OrdersCreatorMock{},
+			limitOrdersCreator: &OrdersCreatorMock{},
 		},
 	}
 

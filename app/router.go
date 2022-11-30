@@ -4,10 +4,23 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/ivivanov/crypto-bot/helper"
 	"github.com/ivivanov/crypto-bot/response"
 )
 
-func MessageRouter(raw []byte, tradeC chan<- *response.MyTrade) {
+type Router struct {
+	bot    *Bot
+	tradeC chan<- *response.MyTrade
+}
+
+func NewRouter(bot *Bot, tradeC chan<- *response.MyTrade) (*Router, error) {
+	return &Router{
+		bot:    bot,
+		tradeC: tradeC,
+	}, nil
+}
+
+func (r *Router) Do(raw []byte) {
 	baseMsg := response.BaseResponse{}
 	err := json.Unmarshal(raw, &baseMsg)
 	if err != nil {
@@ -19,9 +32,9 @@ func MessageRouter(raw []byte, tradeC chan<- *response.MyTrade) {
 	case "bts:heartbeat":
 		err = heartbeatHandler(raw)
 	case "order_created", "order_changed", "order_deleted":
-		err = myOrderHandler(raw, baseMsg.Event)
+		err = myOrderHandler(raw, r.bot.account, baseMsg.Event)
 	case "trade":
-		err = myTradeHandler(raw, tradeC)
+		err = myTradeHandler(raw, r.bot.account, r.bot.tradeC)
 	}
 
 	if err != nil {
@@ -44,7 +57,7 @@ func heartbeatHandler(raw []byte) error {
 	return nil
 }
 
-func myTradeHandler(raw []byte, tradeC chan<- *response.MyTrade) error {
+func myTradeHandler(raw []byte, account string, tradeC chan<- *response.MyTrade) error {
 	myTrade := &response.MyTrade{}
 
 	err := json.Unmarshal(raw, myTrade)
@@ -52,9 +65,14 @@ func myTradeHandler(raw []byte, tradeC chan<- *response.MyTrade) error {
 		return err
 	}
 
-	// if helper.GetAccountFrom(myTrade.Data.ClientOrderID) !=  {
+	tradeAcc, err := helper.GetAccountFrom(myTrade.Data.ClientOrderID)
+	if err != nil {
+		return nil
+	}
 
-	// }
+	if tradeAcc != account {
+		return nil
+	}
 
 	log.Printf("Trade-> %v: %v @ %v", myTrade.Data.Side, myTrade.Data.Amount, myTrade.Data.Price)
 
@@ -63,12 +81,21 @@ func myTradeHandler(raw []byte, tradeC chan<- *response.MyTrade) error {
 	return nil
 }
 
-func myOrderHandler(raw []byte, event string) error {
+func myOrderHandler(raw []byte, account, event string) error {
 	myOrder := response.MyOrder{}
 
 	err := json.Unmarshal(raw, &myOrder)
 	if err != nil {
 		return err
+	}
+
+	orderAcc, err := helper.GetAccountFrom(myOrder.Data.ClientOrderID)
+	if err != nil {
+		return nil
+	}
+
+	if orderAcc != account {
+		return nil
 	}
 
 	log.Printf("Order->%s-> %s: %s @ %s", event, myOrder.GetOrderType(), myOrder.Data.AmountStr, myOrder.Data.PriceStr)

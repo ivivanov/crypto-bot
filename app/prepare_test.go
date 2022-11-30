@@ -20,7 +20,7 @@ func TestOpenBuyOrders(t *testing.T) {
 		bot: &Bot{
 			pair:    pair,
 			account: account,
-			ordersCreator: &PrepareOrdersCreatorMock{
+			limitOrdersCreator: &PrepareOrdersCreatorMock{
 				i:               0,
 				expAccount:      account,
 				expCurrencyPair: pair,
@@ -72,7 +72,7 @@ func (ocm *PrepareOrdersCreatorMock) PostBuyLimitOrder(currencyPair, clientOrder
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if ocm.expAccount != account {
 		return nil, fmt.Errorf("exp: %v, act: %v", ocm.expAccount, account)
 	}
