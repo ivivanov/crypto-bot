@@ -68,11 +68,12 @@ type CancelOrder struct {
 }
 
 type BuyLimitOrder struct {
-	Price    float64  `json:"price,string"`
-	Amount   float64  `json:"amount,string"`
-	Type     int      `json:"type,string"`
-	ID       int64    `json:"id,string"`
-	DateTime DateTime `json:"datetime"`
+	Price         float64  `json:"price,string"`
+	Amount        float64  `json:"amount,string"`
+	Type          int      `json:"type,string"`
+	ID            int64    `json:"id,string"`
+	DateTime      DateTime `json:"datetime"`
+	ClientOrderID string   `json:"client_order_id,omitempty"`
 }
 
 type BuyMarketOrder struct {
@@ -84,11 +85,12 @@ type BuyMarketOrder struct {
 }
 
 type SellLimitOrder struct {
-	Price    float64  `json:"price,string"`
-	Amount   float64  `json:"amount,string"`
-	Type     int      `json:"type,string"`
-	ID       int64    `json:"id,string"`
-	DateTime DateTime `json:"datetime"`
+	Price         float64  `json:"price,string"`
+	Amount        float64  `json:"amount,string"`
+	Type          int      `json:"type,string"`
+	ID            int64    `json:"id,string"`
+	DateTime      DateTime `json:"datetime"`
+	ClientOrderID string   `json:"client_order_id,omitempty"`
 }
 
 type SellMarketOrder struct {

@@ -112,10 +112,14 @@ func (c *Conn) PostCancelOrder(id int64) (*response.CancelOrder, error) {
 	return res, nil
 }
 
-func (c *Conn) PostBuyLimitOrder(currencyPair string, amount float64, price float64) (*response.BuyLimitOrder, error) {
+func (c *Conn) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*response.BuyLimitOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
 	v.Set("price", fmt.Sprint(price))
+
+	if clientOrderID != "" {
+		v.Set("client_order_id", fmt.Sprint(clientOrderID))
+	}
 
 	path := fmt.Sprintf("/v2/buy/%s/", currencyPair)
 	b, err := c.Request("POST", path, v, true)
@@ -146,10 +150,14 @@ func (c *Conn) PostBuyMarketOrder(currencyPair string, amount float64) (*respons
 	return res, nil
 }
 
-func (c *Conn) PostSellLimitOrder(currencyPair string, amount float64, price float64) (*response.SellLimitOrder, error) {
+func (c *Conn) PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*response.SellLimitOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
 	v.Set("price", fmt.Sprint(price))
+
+	if clientOrderID != "" {
+		v.Set("client_order_id", fmt.Sprint(clientOrderID))
+	}
 
 	path := fmt.Sprintf("/v2/sell/%s/", currencyPair)
 	b, err := c.Request("POST", path, v, true)

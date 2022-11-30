@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"encoding/json"
@@ -19,13 +19,14 @@ import (
 )
 
 type OrdersCreator interface {
-	PostSellLimitOrder(currencyPair string, amount float64, price float64) (*bsre.SellLimitOrder, error)
-	PostBuyLimitOrder(currencyPair string, amount float64, price float64) (*bsre.BuyLimitOrder, error)
+	PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.SellLimitOrder, error)
+	PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.BuyLimitOrder, error)
 }
 
-type App struct {
-	pair   string
-	profit float64
+type Bot struct {
+	account string
+	pair    string
+	profit  float64
 
 	// channels
 	interruptC chan os.Signal
@@ -45,12 +46,20 @@ type App struct {
 	trader *Trader
 }
 
-func NewApp() (*App, error) {
-	ParseFlags()
+func NewBot(
+	account string,
+	wsScheme string,
+	wsAddr string,
+	apiKey string,
+	apiSecret string,
+	customerID string,
+	pair string,
+	profit float64,
+) (*Bot, error) {
 
-	wsUrl := url.URL{Scheme: *wsSchemeFlag, Host: *wsAddrFlag}
+	wsUrl := url.URL{Scheme: wsScheme, Host: wsAddr}
 
-	apiConn, err := bs.NewAuthConn(*apiKeyFlag, *apiSecretFlag, *customerIDFlag)
+	apiConn, err := bs.NewAuthConn(apiKey, apiSecret, customerID)
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +82,10 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	app := &App{
-		pair:   *pairFlag,
-		profit: *profitFlag,
+	bot := &Bot{
+		account: account,
+		pair:    pair,
+		profit:  profit,
 
 		interruptC: make(chan os.Signal, 1),
 		messageC:   make(chan []byte),
@@ -88,97 +98,100 @@ func NewApp() (*App, error) {
 		heartbeatMessage: heartbeatMessage,
 	}
 
-	app.trader = NewTrader(app, app.tradeC)
+	bot.trader, err = NewTrader(bot, bot.tradeC)
+	if err != nil {
+		return nil, err
+	}
 
-	myOrders := message.MyOrdersMessage(app.pair, wsToken.Token, wsToken.UserID)
+	myOrders := message.MyOrdersMessage(bot.pair, wsToken.Token, wsToken.UserID)
 	myOrdersMessage, err := json.Marshal(myOrders)
 	if err != nil {
 		return nil, err
 	}
 
-	app.myOrdersMessage = myOrdersMessage
+	bot.myOrdersMessage = myOrdersMessage
 
-	myTrades := message.MyTradesMessage(app.pair, wsToken.Token, wsToken.UserID)
+	myTrades := message.MyTradesMessage(bot.pair, wsToken.Token, wsToken.UserID)
 	myTradesMessage, err := json.Marshal(myTrades)
 	if err != nil {
 		return nil, err
 	}
 
-	app.myTradesMessage = myTradesMessage
+	bot.myTradesMessage = myTradesMessage
 
-	return app, nil
+	return bot, nil
 }
 
-func (app *App) CloseAll() {
-	app.wsConn.Close()
-	close(app.interruptC)
-	close(app.messageC)
-	close(app.doneC)
-	close(app.tradeC)
+func (b *Bot) CloseAll() {
+	b.wsConn.Close()
+	close(b.interruptC)
+	close(b.messageC)
+	close(b.doneC)
+	close(b.tradeC)
 }
 
-func (app *App) Run() error {
-	defer app.CloseAll()
-	signal.Notify(app.interruptC, os.Interrupt)
+func (b *Bot) Run() error {
+	defer b.CloseAll()
+	signal.Notify(b.interruptC, os.Interrupt)
 
 	// routine: read
 	go func() {
 		for {
-			_, msg, err := app.wsConn.ReadMessage()
+			_, msg, err := b.wsConn.ReadMessage()
 			if err != nil {
 				log.Fatal("read:", err)
 				return
 			}
 
-			ResponseHandler(msg, app.tradeC)
+			ResponseHandler(msg, b.tradeC)
 		}
 	}()
 
 	// routine: ping/pong
 	go func() {
 		for {
-			app.messageC <- app.heartbeatMessage
+			b.messageC <- b.heartbeatMessage
 			time.Sleep(15 * time.Second)
 		}
 	}()
 
 	// routine: subscribe
 	go func() {
-		app.messageC <- app.myOrdersMessage
-		app.messageC <- app.myTradesMessage
+		b.messageC <- b.myOrdersMessage
+		b.messageC <- b.myTradesMessage
 	}()
 
 	// routine: trader
 	go func() {
-		app.trader.Start()
+		b.trader.Start()
 	}()
 
 	// routine: main
 	// write, interupt, done
 	for {
 		select {
-		case msg := <-app.messageC:
-			err := app.wsConn.WriteMessage(websocket.TextMessage, msg)
+		case msg := <-b.messageC:
+			err := b.wsConn.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
 				return fmt.Errorf("write: %w", err)
 			}
-		case <-app.interruptC:
+		case <-b.interruptC:
 			log.Println("interrupt")
 
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
-			err := app.wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+			err := b.wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
 				return fmt.Errorf("write close: %w", err)
 			}
 
 			select {
-			case <-app.doneC:
+			case <-b.doneC:
 			case <-time.After(time.Second):
 			}
 
 			return nil
-		case <-app.doneC:
+		case <-b.doneC:
 			return nil
 		}
 	}

@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"encoding/json"
@@ -7,12 +7,13 @@ import (
 	"time"
 
 	bsresponse "github.com/ivivanov/crypto-bot/bitstamp/response"
+	"github.com/ivivanov/crypto-bot/helper"
 	"github.com/ivivanov/crypto-bot/response"
 )
 
 func TestBreakEvenSellPrice(t *testing.T) {
 	trader := Trader{
-		app: &App{
+		bot: &Bot{
 			profit: 0.0,
 		},
 	}
@@ -21,7 +22,7 @@ func TestBreakEvenSellPrice(t *testing.T) {
 	amount := 50.00000
 	fee := 0.01499
 	expSellPrice := 1.0000396
-	expSellPriceRounded := round5dec(expSellPrice)
+	expSellPriceRounded := helper.Round5dec(expSellPrice)
 	actualSellPrice := trader.CalculatePrice(buyPrice, amount, fee, true)
 
 	if buyPrice > actualSellPrice {
@@ -35,7 +36,7 @@ func TestBreakEvenSellPrice(t *testing.T) {
 
 func TestBreakEvenBuyPrice(t *testing.T) {
 	trader := Trader{
-		app: &App{
+		bot: &Bot{
 			profit: 0.0,
 		},
 	}
@@ -44,7 +45,7 @@ func TestBreakEvenBuyPrice(t *testing.T) {
 	amount := 50.00000
 	fee := 0.01499
 	expBuyPrice := 0.9987804
-	expBuyPriceRounded := round5dec(expBuyPrice)
+	expBuyPriceRounded := helper.Round5dec(expBuyPrice)
 	actualBuyPrice := trader.CalculatePrice(sellPrice, amount, fee, false)
 
 	if sellPrice < actualBuyPrice {
@@ -58,7 +59,7 @@ func TestBreakEvenBuyPrice(t *testing.T) {
 
 func TestSellPriceWithProfit(t *testing.T) {
 	trader := Trader{
-		app: &App{
+		bot: &Bot{
 			profit: 0.01,
 		},
 	}
@@ -67,7 +68,7 @@ func TestSellPriceWithProfit(t *testing.T) {
 	amount := 15.00000
 	fee := 0.00300
 	expSellPrice := 1.000320002
-	expSellPriceRounded := round5dec(expSellPrice)
+	expSellPriceRounded := helper.Round5dec(expSellPrice)
 	actualSellPrice := trader.CalculatePrice(buyPrice, amount, fee, true)
 
 	if buyPrice > actualSellPrice {
@@ -81,7 +82,7 @@ func TestSellPriceWithProfit(t *testing.T) {
 
 func TestBuyPriceWithProfit(t *testing.T) {
 	trader := Trader{
-		app: &App{
+		bot: &Bot{
 			profit: 0.01,
 		},
 	}
@@ -90,7 +91,7 @@ func TestBuyPriceWithProfit(t *testing.T) {
 	amount := 50.00000
 	fee := 0.01499
 	expBuyPrice := 0.99868
-	expBuyPriceRounded := round5dec(expBuyPrice)
+	expBuyPriceRounded := helper.Round5dec(expBuyPrice)
 	actualBuyPrice := trader.CalculatePrice(sellPrice, amount, fee, false)
 
 	if sellPrice < actualBuyPrice {
@@ -104,7 +105,7 @@ func TestBuyPriceWithProfit(t *testing.T) {
 
 func TestPostCounterTrade(t *testing.T) {
 	trader := Trader{
-		app: &App{
+		bot: &Bot{
 			ordersCreator: &OrdersCreatorMock{},
 		},
 	}
@@ -126,7 +127,10 @@ func TestPostCounterTrade(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, _ := trader.PostCounterTrade(myTrade)
+	resp, err := trader.PostCounterTrade(myTrade)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	log.Printf("%#v", resp)
 	sellResp, ok := resp.(*bsresponse.SellLimitOrder)
@@ -148,16 +152,17 @@ func TestPostCounterTrade(t *testing.T) {
 type OrdersCreatorMock struct {
 }
 
-func (ocm *OrdersCreatorMock) PostSellLimitOrder(currencyPair string, amount float64, price float64) (*bsresponse.SellLimitOrder, error) {
+func (ocm *OrdersCreatorMock) PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsresponse.SellLimitOrder, error) {
 	return &bsresponse.SellLimitOrder{
-		Price:    price,
-		Amount:   amount,
-		Type:     1,
-		ID:       0,
-		DateTime: bsresponse.DateTime(time.Now()),
+		Price:         price,
+		Amount:        amount,
+		Type:          1,
+		ID:            0,
+		DateTime:      bsresponse.DateTime(time.Now()),
+		ClientOrderID: clientOrderID,
 	}, nil
 }
 
-func (ocm *OrdersCreatorMock) PostBuyLimitOrder(currencyPair string, amount float64, price float64) (*bsresponse.BuyLimitOrder, error) {
+func (ocm *OrdersCreatorMock) PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsresponse.BuyLimitOrder, error) {
 	return nil, nil
 }

@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"encoding/json"
@@ -66,6 +66,8 @@ func myOrderHandler(raw []byte, event string) error {
 	if err != nil {
 		return err
 	}
+
+	log.Printf("%#v", string(raw))
 
 	log.Printf("Order->%s-> %s: %s @ %s", event, myOrder.GetOrderType(), myOrder.Data.AmountStr, myOrder.Data.PriceStr)
 
