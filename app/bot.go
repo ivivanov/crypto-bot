@@ -18,6 +18,17 @@ import (
 	"github.com/ivivanov/crypto-bot/response"
 )
 
+const (
+	// Time allowed to write a message to the peer.
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+)
+
 type LimitOrdersCreator interface {
 	PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.SellLimitOrder, error)
 	PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.BuyLimitOrder, error)
@@ -27,6 +38,8 @@ type Bot struct {
 	account string
 	pair    string
 	profit  float64
+
+	wsConn *websocket.Conn
 
 	// channels
 	interruptC chan os.Signal
@@ -136,30 +149,19 @@ func (b *Bot) Run() error {
 		return fmt.Errorf("dial ws: %w", err)
 	}
 
-	defer wsConn.Close()
+	b.wsConn = wsConn
 
 	log.Printf("dial status: %v", httpResp.StatusCode)
 
-	// routine: read
-	go func() {
-		for {
-			_, msg, err := wsConn.ReadMessage()
-			if err != nil {
-				log.Fatal("read:", err)
-				return
-			}
-
-			b.router.Do(msg)
-		}
-	}()
+	go b.readPump()
 
 	// routine: ping/pong
-	go func() {
-		for {
-			b.messageC <- b.heartbeatMessage
-			time.Sleep(15 * time.Second)
-		}
-	}()
+	// go func() {
+	// 	for {
+	// 		b.messageC <- b.heartbeatMessage
+	// 		time.Sleep(30 * time.Second)
+	// 	}
+	// }()
 
 	// routine: subscribe
 	go func() {
@@ -167,28 +169,60 @@ func (b *Bot) Run() error {
 		b.messageC <- b.myTradesMessage
 	}()
 
-	// routine: trader
-	go func() {
-		b.trader.Start()
-	}()
+	go b.trader.Start()
 
-	// routine: main
-	// write, interupt, done
+	// hold the main routine
+	b.writePump()
+
+	return nil
+}
+
+func (b *Bot) readPump() {
+	defer b.wsConn.Close()
+
+	b.wsConn.SetReadDeadline(time.Now().Add(pongWait))
+	b.wsConn.SetPongHandler(func(string) error {
+		log.Print("pong")
+		b.wsConn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
+	for {
+		_, msg, err := b.wsConn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
+
+			log.Printf("read error: %v", err)
+			break
+		}
+
+		b.router.Do(msg)
+	}
+}
+
+func (b *Bot) writePump() {
+	defer b.wsConn.Close()
+	ticker := time.NewTicker(pingPeriod)
+
 	for {
 		select {
 		case msg := <-b.messageC:
-			err := wsConn.WriteMessage(websocket.TextMessage, msg)
+			b.wsConn.SetWriteDeadline(time.Now().Add(writeWait))
+
+			err := b.wsConn.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
-				return fmt.Errorf("write: %w", err)
+				return
 			}
 		case <-b.interruptC:
 			log.Println("interrupt")
 
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
-			err := wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+			err := b.wsConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				return fmt.Errorf("write close: %w", err)
+				return
 			}
 
 			select {
@@ -196,9 +230,16 @@ func (b *Bot) Run() error {
 			case <-time.After(time.Second):
 			}
 
-			return nil
+			return
+		case <-ticker.C:
+			b.wsConn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := b.wsConn.WriteMessage(websocket.TextMessage, b.heartbeatMessage)
+			if err != nil {
+				log.Printf("write error: %v", err)
+				return
+			}
 		case <-b.doneC:
-			return nil
+			return
 		}
 	}
 }

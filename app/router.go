@@ -3,7 +3,9 @@ package app
 import (
 	"encoding/json"
 	"log"
+	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/ivivanov/crypto-bot/helper"
 	"github.com/ivivanov/crypto-bot/response"
 )
@@ -30,7 +32,7 @@ func (r *Router) Do(raw []byte) {
 
 	switch baseMsg.Event {
 	case "bts:heartbeat":
-		err = heartbeatHandler(raw)
+		err = heartbeatHandler(raw, r.bot.wsConn)
 	case "order_created", "order_changed", "order_deleted":
 		err = myOrderHandler(raw, r.bot.account, baseMsg.Event)
 	case "trade":
@@ -42,7 +44,7 @@ func (r *Router) Do(raw []byte) {
 	}
 }
 
-func heartbeatHandler(raw []byte) error {
+func heartbeatHandler(raw []byte, conn *websocket.Conn) error {
 	hb := response.Heartbeat{}
 
 	err := json.Unmarshal(raw, &hb)
@@ -51,8 +53,10 @@ func heartbeatHandler(raw []byte) error {
 	}
 
 	if hb.Data.Status != "success" {
-		log.Print("pong not received")
+		log.Print(string(raw))
 	}
+
+	conn.SetReadDeadline(time.Now().Add(pongWait))
 
 	return nil
 }
