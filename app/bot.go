@@ -38,6 +38,8 @@ type Bot struct {
 	account string
 	pair    string
 	profit  float64
+	maker   float64
+	taker   float64
 
 	wsConn *websocket.Conn
 
@@ -69,8 +71,9 @@ func NewBot(
 	customerID string,
 	pair string,
 	profit float64,
+	maker float64,
+	taker float64,
 ) (*Bot, error) {
-
 	wsUrl := url.URL{Scheme: wsScheme, Host: wsAddr}
 
 	apiConn, err := bs.NewAuthConn(apiKey, apiSecret, customerID)
@@ -92,6 +95,8 @@ func NewBot(
 		account: account,
 		pair:    pair,
 		profit:  profit,
+		maker:   maker,
+		taker:   taker,
 
 		interruptC: make(chan os.Signal, 1),
 		messageC:   make(chan []byte),

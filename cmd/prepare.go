@@ -22,12 +22,12 @@ var prepareCmd = &cobra.Command{
 	Long: `Grid bot automatically opens new order when the order is filled.
 For this reason we need to create the initial orders based on few configurations.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		bot, err := app.NewBot(account, wsScheme, wsAddr, apiKey, apiSecret, customerID, pair, profit)
+		bot, err := app.NewBot(account, wsScheme, wsAddr, apiKey, apiSecret, customerID, pair, profit, 0, 0)
 		helper.HandleFatalError(err)
 
 		preparer, err := app.NewPreparer(bot)
 		helper.HandleFatalError(err)
-		preparer.OpenBuyOrders(bank, price, grid, orders)
+		helper.HandleFatalError(preparer.OpenBuyOrders(bank, price, grid, orders))
 	},
 }
 
