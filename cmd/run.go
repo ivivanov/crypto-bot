@@ -23,7 +23,7 @@ var runCmd = &cobra.Command{
 	Short: "Runs the bot",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		bot, err := app.NewBot(account, wsScheme, wsAddr, apiKey, apiSecret, customerID, pair, profit, maker, taker)
+		bot, err := app.NewBot(account, wsScheme, wsAddr, apiKey, apiSecret, customerID, pair, profit, maker, taker, verbose)
 		helper.HandleFatalError(err)
 		helper.HandleFatalError(bot.Run())
 	},

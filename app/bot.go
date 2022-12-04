@@ -73,10 +73,11 @@ func NewBot(
 	profit float64,
 	maker float64,
 	taker float64,
+	debug bool,
 ) (*Bot, error) {
 	wsUrl := url.URL{Scheme: wsScheme, Host: wsAddr}
 
-	apiConn, err := bs.NewAuthConn(apiKey, apiSecret, customerID)
+	apiConn, err := bs.NewAuthConn(apiKey, apiSecret, customerID, debug)
 	if err != nil {
 		return nil, err
 	}

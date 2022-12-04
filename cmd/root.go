@@ -13,6 +13,7 @@ var (
 	customerID string
 	apiKey     string
 	apiSecret  string
+	verbose    bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -48,4 +49,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&apiKey, "key", os.Getenv("BS_API_KEY"), "Bitstamp API key")
 	rootCmd.PersistentFlags().StringVar(&apiSecret, "secret", os.Getenv("BS_API_SECRET"), "Bitstamp API secret")
 	rootCmd.PersistentFlags().StringVar(&pair, "pair", os.Getenv("BS_PAIR"), "Trading pair")
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Dumps requests and other debug info")
 }

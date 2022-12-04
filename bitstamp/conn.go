@@ -18,14 +18,14 @@ import (
 )
 
 const (
-	addr    = "https://www.bitstamp.net/api"
-	verbose = false
+	addr = "https://www.bitstamp.net/api"
 )
 
 type Conn struct {
 	apiKey     string
 	apiSecret  string
 	customerID string
+	verbose    bool
 }
 
 // NewConn returns a new Conn.
@@ -36,11 +36,12 @@ func NewConn() (*Conn, error) {
 // NewConn returns a new Conn with authentication parameters.
 // Customer ID: https://www.bitstamp.net/account/balance/
 // API key & secret: https://www.bitstamp.net/account/security/api/
-func NewAuthConn(apiKey, apiSecret, customerID string) (*Conn, error) {
+func NewAuthConn(apiKey, apiSecret, customerID string, verbose bool) (*Conn, error) {
 	conn := &Conn{
 		apiKey:     apiKey,
 		apiSecret:  apiSecret,
 		customerID: customerID,
+		verbose:    verbose,
 	}
 	return conn, nil
 }
@@ -71,7 +72,7 @@ func (c *Conn) Request(meth string, path string, values url.Values, auth bool) (
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	if verbose {
+	if c.verbose {
 		b, err := httputil.DumpRequest(req, true)
 		if err != nil {
 			return nil, err
@@ -87,7 +88,7 @@ func (c *Conn) Request(meth string, path string, values url.Values, auth bool) (
 	if err != nil {
 		return nil, err
 	}
-	if verbose {
+	if c.verbose {
 		fmt.Println(string(b))
 	}
 	if resp.StatusCode != http.StatusOK {
