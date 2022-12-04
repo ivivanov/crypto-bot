@@ -67,6 +67,17 @@ type CancelOrder struct {
 	ID     int64   `json:"id"`
 }
 
+type CancelAllOrders struct {
+	Success  bool `json:"success"`
+	Canceled []struct {
+		ID           int64   `json:"id"`
+		CurrencyPair string  `json:"currency_pair"`
+		Price        float64 `json:"price"`
+		Amount       float64 `json:"amount"`
+		Type         int     `json:"type"`
+	}
+}
+
 type BuyLimitOrder struct {
 	Price         float64             `json:"price,string"`
 	Amount        float64             `json:"amount,string"`

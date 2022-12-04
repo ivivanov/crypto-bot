@@ -17,14 +17,11 @@ In case we hit market price (taker) when posting new order (trade_buy->create_se
 
 ## TODOs
 Easy picks:
-- add debug/verbose flag - check conn.go const verbose
-- add clientOrderId to the output
-- console output
-    - add ClientOrderID
-    - log remove date, add ms
-- cancel all cmd
-- get balance in prepare, remove balance flag, add min order check $10 
-- dump on run start config - profit, etc ...
+- get balance in prepare, remove balance flag, add min order check $10
+    - consider situation where you don not want the whole stack to be allocated
+
+- make ctx struct
+    - add configured logger. remove date & add ms
 
 Backlog:
 - fill partial below min order. If I have order for $10 and only $5 got filled PostCounterTrade would fail

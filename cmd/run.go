@@ -4,6 +4,8 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"log"
+
 	"github.com/ivivanov/crypto-bot/app"
 	"github.com/ivivanov/crypto-bot/helper"
 	"github.com/spf13/cobra"
@@ -25,6 +27,7 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		bot, err := app.NewBot(account, wsScheme, wsAddr, apiKey, apiSecret, customerID, pair, profit, maker, taker, verbose)
 		helper.HandleFatalError(err)
+		log.Printf("pair: %v, profit: %v", pair, profit)
 		helper.HandleFatalError(bot.Run())
 	},
 }

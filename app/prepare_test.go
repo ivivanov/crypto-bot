@@ -60,22 +60,20 @@ func TestOpenBuyOrders(t *testing.T) {
 	orders := 6.0
 
 	prepare := Preparer{
-		bot: &Bot{
-			pair:    pair,
-			account: account,
-			limitOrdersCreator: &PrepareOrdersCreatorMock{
-				i:               0,
-				expAccount:      account,
-				expCurrencyPair: pair,
-				expAmount:       83.33,
-				expPrices: map[int]float64{
-					0: 0.99960,
-					1: 0.99920,
-					2: 0.99880,
-					3: 0.99840,
-					4: 0.99800,
-					5: 0.99760,
-				},
+		account: account,
+		pair:    pair,
+		limitOrdersCreator: &PrepareOrdersCreatorMock{
+			i:               0,
+			expAccount:      account,
+			expCurrencyPair: pair,
+			expAmount:       83.33,
+			expPrices: map[int]float64{
+				0: 0.99960,
+				1: 0.99920,
+				2: 0.99880,
+				3: 0.99840,
+				4: 0.99800,
+				5: 0.99760,
 			},
 		},
 	}

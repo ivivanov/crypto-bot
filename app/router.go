@@ -78,7 +78,7 @@ func myTradeHandler(raw []byte, account string, tradeC chan<- *response.MyTrade)
 		return nil
 	}
 
-	log.Printf("Trade-> %v: %v @ %v", myTrade.Data.Side, myTrade.Data.Amount, myTrade.Data.Price)
+	log.Printf("Trade-> %v: %v @ %v [%s]", myTrade.Data.Side, myTrade.Data.Amount, myTrade.Data.Price, myTrade.Data.ClientOrderID)
 
 	tradeC <- myTrade
 
@@ -102,7 +102,7 @@ func myOrderHandler(raw []byte, account, event string) error {
 		return nil
 	}
 
-	log.Printf("Order->%s-> %s: %s @ %s", event, myOrder.GetOrderType(), myOrder.Data.AmountStr, myOrder.Data.PriceStr)
+	log.Printf("Order->%s-> %s: %s @ %s [%s]", event, myOrder.GetOrderType(), myOrder.Data.AmountStr, myOrder.Data.PriceStr, myOrder.Data.ClientOrderID)
 
 	return nil
 }

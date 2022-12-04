@@ -112,6 +112,24 @@ func (c *Conn) PostCancelOrder(id int64) (*response.CancelOrder, error) {
 	return res, nil
 }
 
+func (c *Conn) PostCancelAllOrders(currencyPair string) (*response.CancelAllOrders, error) {
+	v := url.Values{}
+	path := fmt.Sprintf("/v2/cancel_all_orders/%s/", currencyPair)
+
+	b, err := c.Request("POST", path, v, true)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &response.CancelAllOrders{}
+	err = json.Unmarshal(b, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func (c *Conn) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*response.BuyLimitOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
