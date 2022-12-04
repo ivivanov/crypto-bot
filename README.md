@@ -8,34 +8,34 @@ go install
 - Generate api keys with the minimal possible privileges. It is recommended to use sub account.
 - Create .env file
 - Execute `crypto-bot` from the directory of .env
-  
-### TODOs
- - In case we hit market price (taker) when posting new order (trade_buy->create_sell could hit directly as market order)
-    - this will displace the initial buy order. buy@1 sell@1.1 but market has ask@1.2 => actual sell@1.2 =>  new buy@1.1 (wanted buy@1)
-    - store data where should be the initial buy
-    - create sell order 0.0001 above the current bid (order book needed). This will increase profit by
-    not paying taker fee + selling above the desired target
 
+## ADRs
 
-- add more trade data to clientOrderId - price, target profit, etc
+### 1. ClientOrderID format `[account]_[target_price]_[random]`
+In case we hit market price (taker) when posting new order (trade_buy->create_sell could hit directly as market order). This will displace the initial buy order. For exa buy@1 sell@1.1 but market has ask@1.2 => actual sell@1.2 =>  new buy@1.1 (wanted buy@1). For this reason I am adding more order metadata to the client order id.
+- [todo] create sell order 0.0001 above the current bid (order book needed). This will increase profit by not paying taker fee + selling above the desired target
+
+## TODOs
+Easy picks:
+- add debug/verbose flag - check conn.go const verbose
+- add clientOrderId to the output
 - console output
     - add ClientOrderID
     - log remove date, add ms
+- cancel all cmd
+- get balance in prepare, remove balance flag, add min order check $10 
+- dump on run start config - profit, etc ...
 
-- consider that trade_buy->create_sell could hit directly as market order
-
-- auto reconnect, increase retry time after each fail
+Backlog:
+- fill partial below min order. If I have order for $10 and only $5 got filled PostCounterTrade would fail
+    - keep in memory [price]->[amount_filled] and when enough for min order open it
+- auto ws reconnect
     - currently the app auto terminates when the connection is unhealthy. Running the app as a service could solve the problem too
     https://medium.com/@benmorel/creating-a-linux-service-with-systemd-611b5c8b91d6
 - handle forced reconnection (https://www.bitstamp.net/websocket/v2/)
-- get balance in prepare, remove balance flag, add min order check $10 
-- cancel all cmd
-- dump on run start config - profit, etc ...
 - progressive grid
     - Assume 50/50 usdt/usd
     - We have to historically calculate the 0 starting point. Exclude from the calculation sudden spikes (~accruing once a month)
-    - Better clientOrderId tagging
-        - [subacc]-[target_profit]-[nonce]
     - Bigger density around 0 and smaller profit
     - Orders which are getting more distant from 0 should have progressive profit
     - Make sheet representation of calculator
@@ -79,7 +79,8 @@ Progresive grid:
 ```
 - capital efficiency
     - do not cover the whole spectrum of the price fluctuations
-        - trade around 0 point and in case of period when stuck in usdt/usd use thether.to 
+        - trade around 0 point and in case of period when stuck in usdt/usd use thether.
+        - range can be easily determined by MVC (moving average channel) and MA
         - machine learning for the most frequently visited ranges
     - think of on/off ramp for usdt/usd
         - bank acc
@@ -88,5 +89,7 @@ Progresive grid:
     - possible solution would be sending all request to channel and execute sequentially from single point. Probably we are doing it exactly like that atm
 
 ## Roadmap
+- reduce fees as low as possible
+- implement Kraken
 - integrate im-mem order book for multiple pairs
 - calculate 3way arbs

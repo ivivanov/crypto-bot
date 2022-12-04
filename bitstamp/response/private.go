@@ -68,12 +68,18 @@ type CancelOrder struct {
 }
 
 type BuyLimitOrder struct {
-	Price         float64  `json:"price,string"`
-	Amount        float64  `json:"amount,string"`
-	Type          int      `json:"type,string"`
-	ID            int64    `json:"id,string"`
-	DateTime      DateTime `json:"datetime"`
-	ClientOrderID string   `json:"client_order_id,omitempty"`
+	Price         float64             `json:"price,string"`
+	Amount        float64             `json:"amount,string"`
+	Type          int                 `json:"type,string"`
+	ID            int64               `json:"id,string"`
+	DateTime      DateTime            `json:"datetime"`
+	ClientOrderID string              `json:"client_order_id,omitempty"`
+	Status        string              `json:"status,omitempty"`
+	Reason        map[string][]string `json:"reason,omitempty"`
+}
+
+func (blo *BuyLimitOrder) IsError() bool {
+	return blo.Status == "error"
 }
 
 type BuyMarketOrder struct {
@@ -85,12 +91,18 @@ type BuyMarketOrder struct {
 }
 
 type SellLimitOrder struct {
-	Price         float64  `json:"price,string"`
-	Amount        float64  `json:"amount,string"`
-	Type          int      `json:"type,string"`
-	ID            int64    `json:"id,string"`
-	DateTime      DateTime `json:"datetime"`
-	ClientOrderID string   `json:"client_order_id,omitempty"`
+	Price         float64             `json:"price,string"`
+	Amount        float64             `json:"amount,string"`
+	Type          int                 `json:"type,string"`
+	ID            int64               `json:"id,string"`
+	DateTime      DateTime            `json:"datetime"`
+	ClientOrderID string              `json:"client_order_id,omitempty"`
+	Status        string              `json:"status,omitempty"`
+	Reason        map[string][]string `json:"reason,omitempty"`
+}
+
+func (blo *SellLimitOrder) IsError() bool {
+	return blo.Status == "error"
 }
 
 type SellMarketOrder struct {

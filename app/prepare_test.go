@@ -8,41 +8,6 @@ import (
 	"github.com/ivivanov/crypto-bot/helper"
 )
 
-func TestOpenBuyOrders(t *testing.T) {
-	account := "test"
-	pair := "testpair"
-	price := 1.0
-	bank := 500.0
-	grid := 0.04
-	orders := 6.0
-
-	prepare := Preparer{
-		bot: &Bot{
-			pair:    pair,
-			account: account,
-			limitOrdersCreator: &PrepareOrdersCreatorMock{
-				i:               0,
-				expAccount:      account,
-				expCurrencyPair: pair,
-				expAmount:       83.33,
-				expPrices: map[int]float64{
-					0: 0.99960,
-					1: 0.99920,
-					2: 0.99880,
-					3: 0.99840,
-					4: 0.99800,
-					5: 0.99760,
-				},
-			},
-		},
-	}
-
-	err := prepare.OpenBuyOrders(bank, price, grid, orders)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 type PrepareOrdersCreatorMock struct {
 	i               int
 	expAccount      string
@@ -84,4 +49,39 @@ func (ocm *PrepareOrdersCreatorMock) PostBuyLimitOrder(currencyPair, clientOrder
 		Amount:        amount,
 		ClientOrderID: clientOrderID,
 	}, nil
+}
+
+func TestOpenBuyOrders(t *testing.T) {
+	account := "test"
+	pair := "testpair"
+	price := 1.0
+	bank := 500.0
+	grid := 0.04
+	orders := 6.0
+
+	prepare := Preparer{
+		bot: &Bot{
+			pair:    pair,
+			account: account,
+			limitOrdersCreator: &PrepareOrdersCreatorMock{
+				i:               0,
+				expAccount:      account,
+				expCurrencyPair: pair,
+				expAmount:       83.33,
+				expPrices: map[int]float64{
+					0: 0.99960,
+					1: 0.99920,
+					2: 0.99880,
+					3: 0.99840,
+					4: 0.99800,
+					5: 0.99760,
+				},
+			},
+		},
+	}
+
+	err := prepare.OpenBuyOrders(bank, price, grid, orders)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

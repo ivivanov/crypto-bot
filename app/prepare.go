@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/ivivanov/crypto-bot/helper"
@@ -27,6 +28,11 @@ func (p *Preparer) OpenBuyOrders(bank, price, grid, orders float64) error {
 		resp, err := p.bot.limitOrdersCreator.PostBuyLimitOrder(p.bot.pair, clientOrderID, amount, currPrice)
 		if err != nil {
 			return err
+		}
+
+		if resp.IsError() {
+			log.Print(resp.Reason)
+			return fmt.Errorf("failed to create order")
 		}
 
 		log.Printf("Order-created-> %v: %v @ %v", "buy", resp.Amount, resp.Price)
