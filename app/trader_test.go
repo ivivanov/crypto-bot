@@ -42,6 +42,7 @@ func TestCalculateSellPrice(t *testing.T) {
 		buyPrice     float64
 		amount       float64
 		expSellPrice float64
+		makerFee     float64
 	}{
 		{
 			title:        "Breakeven sell price",
@@ -49,6 +50,23 @@ func TestCalculateSellPrice(t *testing.T) {
 			buyPrice:     0.99944,
 			amount:       50.00000,
 			expSellPrice: helper.Round5dec(0.99984),
+			makerFee:     0.02,
+		},
+		{
+			title:        "Breakeven sell price bitstamp maker fee",
+			profit:       0.0,
+			buyPrice:     1.0,
+			amount:       50.00000,
+			expSellPrice: helper.Round5dec(1.00040),
+			makerFee:     0.02,
+		},
+		{
+			title:        "Breakeven sell price kraken maker fee",
+			profit:       0.0,
+			buyPrice:     1.0,
+			amount:       50.00000,
+			expSellPrice: helper.Round5dec(1.00032),
+			makerFee:     0.016,
 		},
 		{
 			title:        "Sell price with profit",
@@ -56,6 +74,7 @@ func TestCalculateSellPrice(t *testing.T) {
 			buyPrice:     0.99982,
 			amount:       15.00000,
 			expSellPrice: helper.Round5dec(1.000320002),
+			makerFee:     0.02,
 		},
 	} {
 		t.Run(tc.title, func(t *testing.T) {
@@ -63,7 +82,7 @@ func TestCalculateSellPrice(t *testing.T) {
 			trader := Trader{
 				bot: &Bot{
 					profit: tc.profit,
-					maker:  0.02,
+					maker:  tc.makerFee,
 				},
 			}
 
