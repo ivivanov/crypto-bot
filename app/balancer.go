@@ -8,35 +8,32 @@ import (
 	"github.com/ivivanov/crypto-bot/bitstamp/response"
 )
 
-type OrderCanceller interface {
-	PostCancelAllOrders(currencyPair string) (*response.CancelAllOrders, error)
+type BalanceGetter interface {
+	PostAccountBalances(currencyPair string) (*[]response.AccountBalances, error)
 }
 
-type Canceler struct {
-	pair           string
-	orderCanceller OrderCanceller
+type Balancer struct {
+	balanceGetter BalanceGetter
 }
 
-func NewCanceler(
+func NewBalancer(
 	apiKey string,
 	apiSecret string,
 	customerID string,
-	pair string,
 	verbose bool,
-) (*Canceler, error) {
+) (*Balancer, error) {
 	apiConn, err := bs.NewAuthConn(apiKey, apiSecret, customerID, verbose)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Canceler{
-		pair:           pair,
-		orderCanceller: apiConn,
+	return &Balancer{
+		balanceGetter: apiConn,
 	}, nil
 }
 
-func (c *Canceler) CancelAll() error {
-	resp, err := c.orderCanceller.PostCancelAllOrders(c.pair)
+func (b *Balancer) BalanceAll(currencyPair string) error {
+	resp, err := b.balanceGetter.PostAccountBalances(currencyPair)
 	if err != nil {
 		return err
 	}

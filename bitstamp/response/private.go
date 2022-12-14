@@ -33,6 +33,13 @@ type Balance struct {
 	XrpusdFee    float64 `json:"xrpusd_fee,string"`
 }
 
+type AccountBalances struct {
+	Currency  string  `json:"currency"`
+	Total     float64 `json:"total,string"`
+	Available float64 `json:"available,string"`
+	Reserved  float64 `json:"reserved,string"`
+}
+
 type UserTransaction struct {
 	Fee      float64  `json:"fee,string"`
 	OrderID  int64    `json:"order_id"`

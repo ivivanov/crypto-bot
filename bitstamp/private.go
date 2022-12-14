@@ -30,6 +30,29 @@ func (c *Conn) PostBalance(currencyPair string) (*response.Balance, error) {
 	return res, nil
 }
 
+func (c *Conn) PostAccountBalances(currencyPair string) (*[]response.AccountBalances, error) {
+	v := url.Values{}
+	path := fmt.Sprint("/v2/account_balances/")
+
+	if currencyPair != "" {
+		path += fmt.Sprintf("%s/", currencyPair)
+	}
+
+	b, err := c.Request("POST", path, v, true)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &[]response.AccountBalances{}
+
+	err = json.Unmarshal(b, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func (c *Conn) PostUserTransactionsAll(offset int, limit int, sort string) (*[]response.UserTransaction, error) {
 	return c.PostUserTransactions("", offset, limit, sort)
 }

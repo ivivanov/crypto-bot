@@ -19,27 +19,31 @@ Examples in docs.
 ## Roadmap
 - do not cover the whole spectrum of the price fluctuations
     - trade around SMA and in case of period when stuck in usdt/usd use thether.
-    - range can be easily determined by MVC (moving average channel) and MA
     - bollinger band for upper and lower bound
 - think of on/off ramp for usdt/usd
     - bank acc
     - thether.to - min $100k
-- reduce fees as low as possible
-- implement Kraken
-- password protect .env
+- add Kraken api
+    - make interfaces
 - integrate im-mem order book
 - calculate 3way arbs
+    - when fees are low
+- password protect .env
 
 ## TODOs
 - backtesting
-    - trading around SMA (tested)
     - test fixed range
+    - trading around SMA (tested - ttyy script)
+    - try testing arb on 2 charts
 
 - integrate SMA
     - trade around SMA
+    - good to do some refactoring(grid strategy, SMA strat, etc...)
+    - do not put the whole stack in trade. 
+        - Start multiple bots with different configs
+        - start 
 - add min order check $10 (flag because bs, kraken)
 - do not post orders below min order size
-- get balance cmd
 - prepare - auto get balance when balance flag is omitted
 
 - make ctx struct
