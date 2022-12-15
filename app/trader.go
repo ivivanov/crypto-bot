@@ -117,3 +117,7 @@ func (t *Trader) PostBuyCounterTrade(trade *response.MyTrade) (*bsresponse.BuyLi
 
 	return resp, nil
 }
+
+// func (t *Trader) PostBuySmaTrade(trade *response.MyTrade) (*bsresponse.BuyLimitOrder, error) {
+
+// }

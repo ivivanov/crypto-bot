@@ -14,12 +14,12 @@ var balanceCmd = &cobra.Command{
 	Use:   "balance",
 	Short: "Get account balance",
 	Run: func(cmd *cobra.Command, args []string) {
-		balancer, err := app.NewBalancer(apiKey, apiSecret, customerID, verbose)
+		querier, err := app.NewQuerier(apiKey, apiSecret, customerID, verbose)
 		helper.HandleFatalError(err)
-		helper.HandleFatalError(balancer.BalanceAll(""))
+		helper.HandleFatalError(querier.BalanceAll(""))
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(balanceCmd)
+	queryCmd.AddCommand(balanceCmd)
 }

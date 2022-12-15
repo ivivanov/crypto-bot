@@ -85,3 +85,26 @@ func (c *Conn) GetTradingPairsInfo() (*[]response.TradingPairInfo, error) {
 	}
 	return res, nil
 }
+
+// TODO add response type
+func (c *Conn) GetOHLC(currencyPair string, step int) (interface{}, error) {
+	if currencyPair == "" || step == 0 {
+		return nil, fmt.Errorf("all args are required")
+	}
+
+	v := url.Values{}
+	path := fmt.Sprintf("/v2/ohlc/%s/", currencyPair)
+
+	b, err := c.Request("GET", path, v, false)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &response.Ticker{}
+	err = json.Unmarshal(b, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}

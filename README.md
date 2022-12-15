@@ -31,10 +31,43 @@ Examples in docs.
 - password protect .env
 
 ## TODOs
-- backtesting
-    - test fixed range
-    - trading around SMA (tested - ttyy script)
-    - try testing arb on 2 charts
+- add cmd for OHLC (args: step, limit)
+    - implement BS get OHLC
+- add cmd for current SMA
+- add in bot long pooling for OHLC
+    - calculate SMA and store in thread safe value
+
+- in prepare add func for SMA prepare buy 
+    - should create order based on current SMA and applied offset (SMA: 1, offset: 0.0001, buy price: 0.9999)
+- trader
+    - add func for PostSellTrade
+        - should create counter trade based on set profit (buy@ 0.9999, profit: 0.0002, sell price: 1.0001)
+    - add func which detects sell trade and prepare new buy order based on current SMA
+    - create test with predefined OHLC, calculated SMA and check whether on trade correct counter trade is created 
+- run cmd
+    - rename to start
+    - flag for strategy name
+        - SMA
+        - Grid
+    - optimal SMA strategy
+        - ta.sma(close, 20) // 90+%
+        - 1 hour timeframe
+        - Volue oriented (max trades)
+            - offset 0.0001
+            - profit 0.0002
+        - Profit oriented
+            - offset 0.0003
+            - profit 0.0006
+        - Calculate optimal offset
+            - in trading view change chart to high low. Zoom in. Now you see every candle high low. Simple algorithm to calculate the average difference will give optimal offset
+
+- keep in mind that SMA is moving and opened order may never hit. During dip you open new order on the bottom. Instead of waiting to execute it you have to reopen every time SMA moved. That way you guarantee more trades and being always in range.
+- order updater
+    - run on specific interval (flag for timespan: 1h, 2h, 30min,...)
+    - calculate the new SMA
+    - pull orders
+        - if we have buy orders check their current price and act based on SMA
+        - if we have only sell orders - do nothing
 
 - integrate SMA
     - trade around SMA
@@ -45,6 +78,11 @@ Examples in docs.
 - add min order check $10 (flag because bs, kraken)
 - do not post orders below min order size
 - prepare - auto get balance when balance flag is omitted
+
+- backtesting
+    - test fixed range
+    - trading around SMA (tested - ttyy script)
+    - try testing arb on 2 charts
 
 - make ctx struct
     - add configured logger

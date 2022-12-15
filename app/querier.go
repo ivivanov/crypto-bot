@@ -8,32 +8,38 @@ import (
 	"github.com/ivivanov/crypto-bot/bitstamp/response"
 )
 
-type BalanceGetter interface {
+type PrivateGetter interface {
 	PostAccountBalances(currencyPair string) (*[]response.AccountBalances, error)
 }
 
-type Balancer struct {
-	balanceGetter BalanceGetter
+type PublicGetter interface {
+	GetOHLC(currencyPair string, step int) (interface{}, error)
 }
 
-func NewBalancer(
+type Querier struct {
+	privateGetter PrivateGetter
+	publicGetter  PublicGetter
+}
+
+func NewQuerier(
 	apiKey string,
 	apiSecret string,
 	customerID string,
 	verbose bool,
-) (*Balancer, error) {
+) (*Querier, error) {
 	apiConn, err := bs.NewAuthConn(apiKey, apiSecret, customerID, verbose)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Balancer{
-		balanceGetter: apiConn,
+	return &Querier{
+		privateGetter: apiConn,
+		publicGetter:  apiConn,
 	}, nil
 }
 
-func (b *Balancer) BalanceAll(currencyPair string) error {
-	resp, err := b.balanceGetter.PostAccountBalances(currencyPair)
+func (b *Querier) BalanceAll(currencyPair string) error {
+	resp, err := b.privateGetter.PostAccountBalances(currencyPair)
 	if err != nil {
 		return err
 	}
@@ -42,4 +48,9 @@ func (b *Balancer) BalanceAll(currencyPair string) error {
 	log.Printf("%s", string(r))
 
 	return nil
+}
+
+
+func (b *Querier) Ohcl()  {
+	
 }
