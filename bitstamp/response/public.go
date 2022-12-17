@@ -35,3 +35,17 @@ type TradingPairInfo struct {
 	MinimumOrder    string `json:"minimum_order"`
 	BaseDecimals    int    `json:"base_decimals"`
 }
+
+type OHLCData struct {
+	OHCL []OHLC `json:"ohlc"`
+	Pair string `json:"pair"`
+}
+
+type OHLC struct {
+	Close     float64 `json:"close,string"`
+	High      float64 `json:"high,string"`
+	Low       float64 `json:"low,string"`
+	Open      float64 `json:"open,string"`
+	Volume    float64 `json:"volume,string"`
+	Timestamp string  `json:"timestamp"`
+}

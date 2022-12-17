@@ -28,8 +28,6 @@ var ohlcCmd = &cobra.Command{
 func init() {
 	queryCmd.AddCommand(ohlcCmd)
 
-	ohlcCmd.Flags().IntVar(&step, "step", 0, "Timeframe in seconds. Possible options are 60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 259200")
+	ohlcCmd.Flags().IntVar(&step, "step", 3600, "Timeframe in seconds. Possible options are 60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 259200")
 	ohlcCmd.Flags().IntVar(&limit, "limit", 1000, "Limit OHLC results (minimum: 1; maximum: 1000)")
-
-	ohlcCmd.MarkFlagRequired("step")
 }

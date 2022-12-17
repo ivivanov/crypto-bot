@@ -87,7 +87,7 @@ func (c *Conn) GetTradingPairsInfo() (*[]response.TradingPairInfo, error) {
 }
 
 // TODO add response type
-func (c *Conn) GetOHLC(currencyPair string, step, limit int) (interface{}, error) {
+func (c *Conn) GetOHLC(currencyPair string, step, limit int) (*[]response.OHLC, error) {
 	if currencyPair == "" || step == 0 {
 		return nil, fmt.Errorf("all args are required")
 	}
@@ -102,11 +102,13 @@ func (c *Conn) GetOHLC(currencyPair string, step, limit int) (interface{}, error
 		return nil, err
 	}
 
-	res := &response.Ticker{}
-	err = json.Unmarshal(b, res)
+	res := map[string]response.OHLCData{}
+	err = json.Unmarshal(b, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	return res, nil
+	ohlc := res["data"].OHCL
+
+	return &ohlc, nil
 }
