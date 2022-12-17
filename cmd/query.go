@@ -9,8 +9,8 @@ import (
 
 // balanceCmd represents the balance command
 var queryCmd = &cobra.Command{
-	Use:   "query",
-	Short: "Public queries which does not require authentication",
+	Use:   "q",
+	Short: "Queries data which does not require authentication",
 }
 
 func init() {

@@ -13,7 +13,7 @@ type PrivateGetter interface {
 }
 
 type PublicGetter interface {
-	GetOHLC(currencyPair string, step int) (interface{}, error)
+	GetOHLC(currencyPair string, step, limit int) (interface{}, error)
 }
 
 type Querier struct {
@@ -50,7 +50,14 @@ func (b *Querier) BalanceAll(currencyPair string) error {
 	return nil
 }
 
+func (b *Querier) OHLC(pair string, step, limit int) error {
+	resp, err := b.publicGetter.GetOHLC(pair, step, limit)
+	if err != nil {
+		return err
+	}
 
-func (b *Querier) Ohcl()  {
-	
+	r, _ := json.MarshalIndent(resp, "", "	")
+	log.Printf("%s", string(r))
+
+	return nil
 }

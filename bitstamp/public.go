@@ -87,12 +87,14 @@ func (c *Conn) GetTradingPairsInfo() (*[]response.TradingPairInfo, error) {
 }
 
 // TODO add response type
-func (c *Conn) GetOHLC(currencyPair string, step int) (interface{}, error) {
+func (c *Conn) GetOHLC(currencyPair string, step, limit int) (interface{}, error) {
 	if currencyPair == "" || step == 0 {
 		return nil, fmt.Errorf("all args are required")
 	}
 
 	v := url.Values{}
+	v.Set("step", fmt.Sprint(step))
+	v.Set("limit", fmt.Sprint(limit))
 	path := fmt.Sprintf("/v2/ohlc/%s/", currencyPair)
 
 	b, err := c.Request("GET", path, v, false)

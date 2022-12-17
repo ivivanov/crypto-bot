@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	step uint64
+	step  int
+	limit int
 )
 
 // ohlcCmd represents the ohlc command
@@ -20,14 +21,15 @@ var ohlcCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		querier, err := app.NewQuerier(apiKey, apiSecret, customerID, verbose)
 		helper.HandleFatalError(err)
-		helper.HandleFatalError(querier.O)
+		helper.HandleFatalError(querier.OHLC(pair, step, limit))
 	},
 }
 
 func init() {
 	queryCmd.AddCommand(ohlcCmd)
 
-	ohlcCmd.Flags().Uint64Var(&step, "step", 0, "Timeframe in seconds. Possible options are 60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 259200")
+	ohlcCmd.Flags().IntVar(&step, "step", 0, "Timeframe in seconds. Possible options are 60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 259200")
+	ohlcCmd.Flags().IntVar(&limit, "limit", 1000, "Limit OHLC results (minimum: 1; maximum: 1000)")
 
 	ohlcCmd.MarkFlagRequired("step")
 }

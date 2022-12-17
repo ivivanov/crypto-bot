@@ -58,19 +58,32 @@ func (c *Conn) SetAuth(apiKey, apiSecret, customerID string) {
 	c.customerID = customerID
 }
 
-func (c *Conn) Request(meth string, path string, values url.Values, auth bool) ([]byte, error) {
+func (c *Conn) Request(method string, path string, values url.Values, auth bool) ([]byte, error) {
 	if auth {
 		if c.customerID == "" || c.apiKey == "" || c.apiSecret == "" {
 			return nil, ErrAuthRequired
 		}
 		setAuthValues(values, c.customerID, c.apiKey, c.apiSecret)
 	}
+
 	body := strings.NewReader(values.Encode())
+
 	client := &http.Client{}
-	req, err := http.NewRequest(meth, addr+path, body)
+	req, err := http.NewRequest(method, addr+path, body)
 	if err != nil {
 		return nil, err
 	}
+
+	if method == http.MethodGet {
+		query := req.URL.Query()
+
+		for k, v := range values {
+			query.Add(k, v[0])
+		}
+
+		req.URL.RawQuery = query.Encode()
+	}
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	if c.verbose {
 		b, err := httputil.DumpRequest(req, true)
@@ -78,12 +91,16 @@ func (c *Conn) Request(meth string, path string, values url.Values, auth bool) (
 			return nil, err
 		}
 		fmt.Println(string(b))
+		fmt.Println(req.URL.String())
 	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+
 	defer resp.Body.Close()
+
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
