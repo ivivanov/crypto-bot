@@ -11,7 +11,7 @@ import (
 type Preparer struct {
 	account            string
 	pair               string
-	limitOrdersCreator LimitOrdersCreator
+	limitOrdersCreator OrderCreator
 }
 
 func NewPreparer(

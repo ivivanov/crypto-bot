@@ -1,7 +1,7 @@
 package app
 
 import (
-	bsresponse "github.com/ivivanov/crypto-bot/bitstamp/response"
+	bsre "github.com/ivivanov/crypto-bot/bitstamp/response"
 	"github.com/ivivanov/crypto-bot/helper"
 
 	"github.com/ivivanov/crypto-bot/response"
@@ -35,30 +35,27 @@ import (
 // USD base = total USD gain - fee
 // USD base with profit = USD base - USD base * profit
 // buy price = USD base / buy USDT
-
-type Trader struct {
-	bot    *Bot
-	tradeC <-chan *response.MyTrade
+type GridTrader struct {
+	Config       *BotCtx
+	OrderCreator OrderCreator
 }
 
-func NewTrader(bot *Bot, tradeC <-chan *response.MyTrade) (*Trader, error) {
-	return &Trader{
-		bot:    bot,
-		tradeC: tradeC,
-	}, nil
+type OrderCreator interface {
+	PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.SellLimitOrder, error)
+	PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.BuyLimitOrder, error)
 }
 
 // Must start in new routine
-func (t *Trader) Start() {
+func (gt *GridTrader) Start(tradeC <-chan *response.MyTrade) {
 	for {
-		trade := <-t.tradeC
+		trade := <-tradeC
 
 		switch trade.Data.Side {
 		case "buy":
-			_, err := t.PostSellCounterTrade(trade)
+			_, err := gt.PostSellCounterTrade(trade)
 			helper.HandleFatalError(err)
 		case "sell":
-			_, err := t.PostBuyCounterTrade(trade)
+			_, err := gt.PostBuyCounterTrade(trade)
 			helper.HandleFatalError(err)
 		}
 	}
@@ -66,11 +63,11 @@ func (t *Trader) Start() {
 
 // Returns round number up to 5 decimal precision
 // start with buy USDT
-func (t *Trader) CalculateSellPrice(buyPrice, amount float64) float64 {
-	fee := (amount * t.bot.maker) / 100
+func (t *GridTrader) CalculateSellPrice(buyPrice, amount float64) float64 {
+	fee := (amount * t.Config.MakerFee) / 100
 	totalUsdPaid := buyPrice*amount + fee
 	usdBaseSell := totalUsdPaid + fee
-	usdBaseSellProfit := usdBaseSell + (usdBaseSell*t.bot.profit)/100
+	usdBaseSellProfit := usdBaseSell + (usdBaseSell*t.Config.Profit)/100
 	sellPrice := usdBaseSellProfit / amount
 
 	return helper.Round5dec(sellPrice)
@@ -78,24 +75,24 @@ func (t *Trader) CalculateSellPrice(buyPrice, amount float64) float64 {
 
 // Returns round number up to 5 decimal precision
 // start with sell USDT
-func (t *Trader) CalculateBuyPrice(sellPrice, amount float64) float64 {
-	fee := (amount * t.bot.maker) / 100
+func (t *GridTrader) CalculateBuyPrice(sellPrice, amount float64) float64 {
+	fee := (amount * t.Config.MakerFee) / 100
 	totalUsdGain := sellPrice*amount - fee
 	usdBaseBuy := totalUsdGain - fee
-	usdBaseBuyProfit := usdBaseBuy - (usdBaseBuy*t.bot.profit)/100
+	usdBaseBuyProfit := usdBaseBuy - (usdBaseBuy*t.Config.Profit)/100
 	buyPrice := usdBaseBuyProfit / amount
 
 	return helper.Round5dec(buyPrice)
 }
 
-func (t *Trader) PostSellCounterTrade(trade *response.MyTrade) (*bsresponse.SellLimitOrder, error) {
+func (t *GridTrader) PostSellCounterTrade(trade *response.MyTrade) (*bsre.SellLimitOrder, error) {
 	price, err := helper.GetPriceFrom(trade.Data.ClientOrderID)
 	if err != nil {
 		return nil, err
 	}
 
 	sellPrice := t.CalculateSellPrice(price, trade.Amount())
-	resp, err := t.bot.limitOrdersCreator.PostSellLimitOrder(t.bot.pair, helper.GetClientOrderID(t.bot.account, sellPrice), trade.Amount(), sellPrice)
+	resp, err := t.OrderCreator.PostSellLimitOrder(t.Config.Pair, helper.GetClientOrderID(t.Config.Account, sellPrice), trade.Amount(), sellPrice)
 	if err != nil {
 		return nil, err
 	}
@@ -103,21 +100,17 @@ func (t *Trader) PostSellCounterTrade(trade *response.MyTrade) (*bsresponse.Sell
 	return resp, nil
 }
 
-func (t *Trader) PostBuyCounterTrade(trade *response.MyTrade) (*bsresponse.BuyLimitOrder, error) {
+func (t *GridTrader) PostBuyCounterTrade(trade *response.MyTrade) (*bsre.BuyLimitOrder, error) {
 	price, err := helper.GetPriceFrom(trade.Data.ClientOrderID)
 	if err != nil {
 		return nil, err
 	}
 
 	buyPrice := t.CalculateBuyPrice(price, trade.Amount())
-	resp, err := t.bot.limitOrdersCreator.PostBuyLimitOrder(t.bot.pair, helper.GetClientOrderID(t.bot.account, buyPrice), trade.Amount(), buyPrice)
+	resp, err := t.OrderCreator.PostBuyLimitOrder(t.Config.Pair, helper.GetClientOrderID(t.Config.Account, buyPrice), trade.Amount(), buyPrice)
 	if err != nil {
 		return nil, err
 	}
 
 	return resp, nil
 }
-
-// func (t *Trader) PostBuySmaTrade(trade *response.MyTrade) (*bsresponse.BuyLimitOrder, error) {
-
-// }

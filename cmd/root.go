@@ -14,6 +14,9 @@ var (
 	apiKey     string
 	apiSecret  string
 	verbose    bool
+	timeframe  int
+	ohlcLimit  int
+	smaLenght  int
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -22,11 +25,7 @@ var rootCmd = &cobra.Command{
 	Short: "Automated grid trading strategy",
 	Long: `Run prepare first. This will open tagged buy/sell orders into the sub-account.
 Tags are used to route the orders to their specific sub-account.
-Manually created orders will not be processed.
-For example:
-crypto-bot prepare
-crypto-bot run
-`,
+Manually created orders will not be processed.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

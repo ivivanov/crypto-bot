@@ -31,7 +31,6 @@ Examples in docs.
 - password protect .env
 
 ## TODOs
-- add cmd for current SMA
 - add in bot long pooling for OHLC
     - calculate SMA and store in thread safe value
 

@@ -12,9 +12,9 @@ import (
 type OrderType int8
 
 const (
-	Buy  uint8 = 0
-	Sell uint8 = 1
-	Both uint8 = 2
+	Buy  uint8 = 1
+	Sell uint8 = 2
+	Both uint8 = 3
 )
 
 var (
@@ -52,7 +52,7 @@ func init() {
 	prepareCmd.Flags().Float64Var(&bank, "bank", 0, "Start capital")
 	prepareCmd.Flags().Float64Var(&grid, "grid", 0.04, "Grid step %")
 	prepareCmd.Flags().Float64Var(&orders, "orders", 6, "Initial orders count")
-	prepareCmd.Flags().Uint8Var(&ordersType, "type", 0, "0 - only buy; 1 - only sell; 2 - both")
+	prepareCmd.Flags().Uint8Var(&ordersType, "type", 1, "1 - only buy; 2 - only sell; 3 - both")
 
 	prepareCmd.MarkFlagRequired("price")
 	prepareCmd.MarkFlagRequired("bank")

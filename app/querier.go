@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"log"
-	"time"
 
 	bs "github.com/ivivanov/crypto-bot/bitstamp"
 	"github.com/ivivanov/crypto-bot/bitstamp/response"
@@ -51,35 +50,27 @@ func (b *Querier) BalanceAll(currencyPair string) error {
 	return nil
 }
 
-func (b *Querier) OHLC(pair string, step, limit int) error {
+func (b *Querier) OHLC(pair string, step, limit int) (*[]response.OHLC, error) {
 	resp, err := b.publicGetter.GetOHLC(pair, step, limit)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	r, _ := json.MarshalIndent(resp, "", "	")
-	log.Printf("%s", string(r))
-
-	return nil
+	return resp, nil
 }
 
-func (b *Querier) SMA(pair string, step, limit, period int) error {
+func (b *Querier) SMA(pair string, step, limit, period int) ([]float64, error) {
 	ohlc, err := b.publicGetter.GetOHLC(pair, step, limit)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	result := smaFrom(period, *ohlc, func(v response.OHLC) float64 { return v.Close })
 
-	count := len(result)
-	hourNow := time.Now().Hour()
-
-	log.Printf("%v:00 %v, %v:00 %v, %v:00 %v", hourNow-2, result[count-3], hourNow-1, result[count-2], hourNow, result[count-1])
-
-	return nil
+	return result, nil
 }
 
-func smaFrom(period int, history []response.OHLC, getVal func(v response.OHLC) float64) []float64 {
+func smaFrom(length int, history []response.OHLC, getVal func(v response.OHLC) float64) []float64 {
 	result := make([]float64, len(history))
 	sum := float64(0)
 
@@ -87,9 +78,9 @@ func smaFrom(period int, history []response.OHLC, getVal func(v response.OHLC) f
 		count := i + 1
 		sum += getVal(ohlc)
 
-		if i >= period {
-			sum -= getVal(history[i-period])
-			count = period
+		if i >= length {
+			sum -= getVal(history[i-length])
+			count = length
 		}
 
 		result[i] = sum / float64(count)

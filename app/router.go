@@ -34,9 +34,9 @@ func (r *Router) Do(raw []byte) {
 	case "bts:heartbeat":
 		err = heartbeatHandler(raw, r.bot.wsConn)
 	case "order_created", "order_changed", "order_deleted":
-		err = myOrderHandler(raw, r.bot.account, baseMsg.Event)
+		err = myOrderHandler(raw, r.bot.ctx.Account, baseMsg.Event)
 	case "trade":
-		err = myTradeHandler(raw, r.bot.account, r.bot.tradeC)
+		err = myTradeHandler(raw, r.bot.ctx.Account, r.bot.tradeC)
 	}
 
 	if err != nil {

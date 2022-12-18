@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"strconv"
 	"testing"
 
 	_ "embed"
@@ -17,6 +18,19 @@ func TestSmaFrom(t *testing.T) {
 	err := json.Unmarshal([]byte(ohlcData), &ohlc)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	for i := 0; i < len(ohlc)-1; i++ {
+		curr, _ := strconv.ParseInt(ohlc[i].Timestamp, 10, 64)
+		next, _ := strconv.ParseInt(ohlc[i+1].Timestamp, 10, 64)
+
+		if next-curr < 0 {
+			t.Error("timestamp should be in chronological order")
+		}
+
+		if next-curr != 3600 {
+			t.Errorf("exp: %v, act: %v", 3600, next-curr)
+		}
 	}
 
 	sma := smaFrom(20, ohlc, func(v bsresponse.OHLC) float64 { return v.Close })

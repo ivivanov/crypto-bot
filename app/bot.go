@@ -11,9 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	bs "github.com/ivivanov/crypto-bot/bitstamp"
-	bsre "github.com/ivivanov/crypto-bot/bitstamp/response"
-
+	"github.com/ivivanov/crypto-bot/bitstamp"
 	"github.com/ivivanov/crypto-bot/message"
 	"github.com/ivivanov/crypto-bot/response"
 )
@@ -29,18 +27,31 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 )
 
-type LimitOrdersCreator interface {
-	PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.SellLimitOrder, error)
-	PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.BuyLimitOrder, error)
+type Trader interface {
+	Start(tradeC <-chan *response.MyTrade)
+}
+
+type BotCtx struct {
+	ApiConn *bitstamp.Conn
+
+	Debug      bool
+	Account    string
+	Pair       string
+	Profit     float64
+	MakerFee   float64
+	TakerFee   float64
+	WSScheme   string
+	WSAddr     string
+	APIKey     string
+	APISecret  string
+	CustomerID string
+	Timeframe  int
+	OHLCLimit  int
+	SMALength  int
 }
 
 type Bot struct {
-	account string
-	pair    string
-	profit  float64
-	maker   float64
-	taker   float64
-
+	ctx    *BotCtx
 	wsConn *websocket.Conn
 
 	// channels
@@ -50,8 +61,8 @@ type Bot struct {
 	tradeC     chan *response.MyTrade
 
 	// bitstamp
-	limitOrdersCreator LimitOrdersCreator
-	wsUrl              string
+	publicGetter PublicGetter
+	wsUrl        string
 
 	// messages
 	heartbeatMessage []byte
@@ -59,30 +70,13 @@ type Bot struct {
 	myTradesMessage  []byte
 
 	router *Router
-	trader *Trader
+	trader Trader
 }
 
-func NewBot(
-	account string,
-	wsScheme string,
-	wsAddr string,
-	apiKey string,
-	apiSecret string,
-	customerID string,
-	pair string,
-	profit float64,
-	maker float64,
-	taker float64,
-	debug bool,
-) (*Bot, error) {
-	wsUrl := url.URL{Scheme: wsScheme, Host: wsAddr}
+func NewBot(ctx *BotCtx, trader Trader) (*Bot, error) {
+	wsUrl := url.URL{Scheme: ctx.WSScheme, Host: ctx.WSAddr}
 
-	apiConn, err := bs.NewAuthConn(apiKey, apiSecret, customerID, debug)
-	if err != nil {
-		return nil, err
-	}
-
-	wsToken, err := apiConn.WebsocketToken()
+	wsToken, err := ctx.ApiConn.WebsocketToken()
 	if err != nil {
 		return nil, err
 	}
@@ -93,33 +87,26 @@ func NewBot(
 	}
 
 	bot := &Bot{
-		account: account,
-		pair:    pair,
-		profit:  profit,
-		maker:   maker,
-		taker:   taker,
-
+		ctx:        ctx,
 		interruptC: make(chan os.Signal, 1),
 		messageC:   make(chan []byte),
 		doneC:      make(chan struct{}),
 		tradeC:     make(chan *response.MyTrade),
 
-		limitOrdersCreator: apiConn,
-		wsUrl:              wsUrl.String(),
+		publicGetter: ctx.ApiConn,
+		wsUrl:        wsUrl.String(),
 
 		heartbeatMessage: heartbeatMessage,
+
+		trader: trader,
 	}
+
 	bot.router, err = NewRouter(bot, bot.tradeC)
 	if err != nil {
 		return nil, err
 	}
 
-	bot.trader, err = NewTrader(bot, bot.tradeC)
-	if err != nil {
-		return nil, err
-	}
-
-	myOrders := message.MyOrdersMessage(bot.pair, wsToken.Token, wsToken.UserID)
+	myOrders := message.MyOrdersMessage(ctx.Pair, wsToken.Token, wsToken.UserID)
 	myOrdersMessage, err := json.Marshal(myOrders)
 	if err != nil {
 		return nil, err
@@ -127,7 +114,7 @@ func NewBot(
 
 	bot.myOrdersMessage = myOrdersMessage
 
-	myTrades := message.MyTradesMessage(bot.pair, wsToken.Token, wsToken.UserID)
+	myTrades := message.MyTradesMessage(ctx.Pair, wsToken.Token, wsToken.UserID)
 	myTradesMessage, err := json.Marshal(myTrades)
 	if err != nil {
 		return nil, err
@@ -161,21 +148,13 @@ func (b *Bot) Run() error {
 
 	go b.readPump()
 
-	// routine: ping/pong
-	// go func() {
-	// 	for {
-	// 		b.messageC <- b.heartbeatMessage
-	// 		time.Sleep(30 * time.Second)
-	// 	}
-	// }()
-
 	// routine: subscribe
 	go func() {
 		b.messageC <- b.myOrdersMessage
 		b.messageC <- b.myTradesMessage
 	}()
 
-	go b.trader.Start()
+	go b.trader.Start(b.tradeC)
 
 	// hold the main routine
 	b.writePump()
@@ -188,7 +167,6 @@ func (b *Bot) readPump() {
 
 	b.wsConn.SetReadDeadline(time.Now().Add(pongWait))
 	b.wsConn.SetPongHandler(func(string) error {
-		log.Print("pong")
 		b.wsConn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
