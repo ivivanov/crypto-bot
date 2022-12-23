@@ -19,7 +19,7 @@ var smaCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		querier, err := app.NewQuerier(apiKey, apiSecret, customerID, verbose)
 		helper.HandleFatalError(err)
-		result, err := querier.SMA(pair, timeframe, ohlcLimit, smaLenght)
+		result, err := querier.SMA(pair, timeframe, ohlcLimit, smaLength)
 		helper.HandleFatalError(err)
 
 		count := len(result)
@@ -37,7 +37,7 @@ var smaCmd = &cobra.Command{
 func init() {
 	queryCmd.AddCommand(smaCmd)
 
-	smaCmd.Flags().IntVar(&timeframe, "step", 3600, "Source Timeframe in seconds. Possible options are 60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 259200")
+	smaCmd.Flags().IntVar(&timeframe, "timeframe", 3600, "Source Timeframe in seconds. Possible options are 60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 259200")
 	smaCmd.Flags().IntVar(&ohlcLimit, "limit", 1000, "Source Limit OHLC results (minimum: 1; maximum: 1000)")
-	smaCmd.Flags().IntVar(&smaLenght, "length", 20, "SMA length")
+	smaCmd.Flags().IntVar(&smaLength, "length", 20, "SMA length")
 }

@@ -31,8 +31,13 @@ Examples in docs.
 - password protect .env
 
 ## TODOs
-- add in bot long pooling for OHLC
-    - calculate SMA and store in thread safe value
+- Tests for SMA trader
+    - simulate realtime data through channels
+    - mock cancel and new order
+    - create ohlc data to simulate volatile market (ohlc_test.json)
+    - send trades to tradeC
+
+- Live order book. Trading based on long pooling data of OHCL limits us. Maybe ...
 
 - in prepare add func for SMA prepare buy 
     - should create order based on current SMA and applied offset (SMA: 1, offset: 0.0001, buy price: 0.9999)

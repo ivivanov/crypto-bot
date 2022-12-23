@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -32,22 +33,15 @@ type Trader interface {
 }
 
 type BotCtx struct {
-	ApiConn *bitstamp.Conn
-
+	ApiConn    *bitstamp.Conn
 	Debug      bool
 	Account    string
 	Pair       string
-	Profit     float64
-	MakerFee   float64
-	TakerFee   float64
 	WSScheme   string
 	WSAddr     string
 	APIKey     string
 	APISecret  string
 	CustomerID string
-	Timeframe  int
-	OHLCLimit  int
-	SMALength  int
 }
 
 type Bot struct {
@@ -74,6 +68,9 @@ type Bot struct {
 }
 
 func NewBot(ctx *BotCtx, trader Trader) (*Bot, error) {
+	if ctx == nil || trader == nil {
+		return nil, errors.New("all args are required")
+	}
 	wsUrl := url.URL{Scheme: ctx.WSScheme, Host: ctx.WSAddr}
 
 	wsToken, err := ctx.ApiConn.WebsocketToken()

@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -16,6 +17,11 @@ func HandleFatalError(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func PrintIdent(obj interface{}) {
+	r, _ := json.MarshalIndent(obj, "", "	")
+	log.Printf("%s", string(r))
 }
 
 func Round5dec(num float64) float64 {

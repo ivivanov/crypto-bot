@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	bsresponse "github.com/ivivanov/crypto-bot/bitstamp/response"
+	bsre "github.com/ivivanov/crypto-bot/bitstamp/response"
 	"github.com/ivivanov/crypto-bot/helper"
 	"github.com/ivivanov/crypto-bot/response"
 )
@@ -13,24 +13,24 @@ import (
 type OrderCreatorMock struct {
 }
 
-func (ocm *OrderCreatorMock) PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsresponse.SellLimitOrder, error) {
-	return &bsresponse.SellLimitOrder{
+func (ocm *OrderCreatorMock) PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.SellLimitOrder, error) {
+	return &bsre.SellLimitOrder{
 		Price:         price,
 		Amount:        amount,
 		Type:          1,
 		ID:            0,
-		DateTime:      bsresponse.DateTime(time.Now()),
+		DateTime:      bsre.DateTime(time.Now()),
 		ClientOrderID: clientOrderID,
 	}, nil
 }
 
-func (ocm *OrderCreatorMock) PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsresponse.BuyLimitOrder, error) {
-	return &bsresponse.BuyLimitOrder{
+func (ocm *OrderCreatorMock) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.BuyLimitOrder, error) {
+	return &bsre.BuyLimitOrder{
 		Price:         price,
 		Amount:        amount,
 		Type:          0,
 		ID:            0,
-		DateTime:      bsresponse.DateTime(time.Now()),
+		DateTime:      bsre.DateTime(time.Now()),
 		ClientOrderID: clientOrderID,
 	}, nil
 }
@@ -78,12 +78,9 @@ func TestCalculateSellPrice(t *testing.T) {
 		},
 	} {
 		t.Run(tc.title, func(t *testing.T) {
-
 			trader := GridTrader{
-				Config: &BotCtx{
-					Profit:   tc.profit,
-					MakerFee: tc.makerFee,
-				},
+				MakerFee: tc.makerFee,
+				Profit:   tc.profit,
 			}
 
 			actualSellPrice := trader.CalculateSellPrice(tc.buyPrice, tc.amount)
@@ -124,10 +121,8 @@ func TestCalculateBuyPrice(t *testing.T) {
 	} {
 		t.Run(tc.title, func(t *testing.T) {
 			trader := GridTrader{
-				Config: &BotCtx{
-					Profit:   tc.profit,
-					MakerFee: 0.02,
-				},
+				Profit:   tc.profit,
+				MakerFee: 0.02,
 			}
 
 			actualBuyPrice := trader.CalculateBuyPrice(tc.sellPrice, tc.amount)
@@ -185,9 +180,8 @@ func TestPostSellCounterTrade(t *testing.T) {
 	} {
 		t.Run(tc.title, func(t *testing.T) {
 			trader := GridTrader{
-				Config: &BotCtx{
-					MakerFee: 0.02,
-				},
+				Ctx:          &BotCtx{},
+				MakerFee:     0.02,
 				OrderCreator: &OrderCreatorMock{},
 			}
 
@@ -255,9 +249,8 @@ func TestPostBuyCounterTrade(t *testing.T) {
 	} {
 		t.Run(tc.title, func(t *testing.T) {
 			trader := GridTrader{
-				Config: &BotCtx{
-					MakerFee: 0.02,
-				},
+				Ctx: &BotCtx{},
+				MakerFee:     0.02,
 				OrderCreator: &OrderCreatorMock{},
 			}
 

@@ -1,15 +1,14 @@
 package app
 
 import (
-	"encoding/json"
-	"log"
-
 	bs "github.com/ivivanov/crypto-bot/bitstamp"
 	"github.com/ivivanov/crypto-bot/bitstamp/response"
+	"github.com/ivivanov/crypto-bot/helper"
 )
 
 type PrivateGetter interface {
 	PostAccountBalances(currencyPair string) (*[]response.AccountBalances, error)
+	PostOpenOrders(currencyPair string) (*[]response.OpenOrder, error)
 }
 
 type PublicGetter interface {
@@ -44,8 +43,7 @@ func (b *Querier) BalanceAll(currencyPair string) error {
 		return err
 	}
 
-	r, _ := json.MarshalIndent(resp, "", "	")
-	log.Printf("%s", string(r))
+	helper.PrintIdent(resp)
 
 	return nil
 }

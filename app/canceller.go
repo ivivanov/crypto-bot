@@ -1,15 +1,14 @@
 package app
 
 import (
-	"encoding/json"
-	"log"
-
 	bs "github.com/ivivanov/crypto-bot/bitstamp"
 	"github.com/ivivanov/crypto-bot/bitstamp/response"
+	"github.com/ivivanov/crypto-bot/helper"
 )
 
 type OrderCanceller interface {
 	PostCancelAllOrders(currencyPair string) (*response.CancelAllOrders, error)
+	PostCancelOrder(id int64) (*response.CancelOrder, error)
 }
 
 type Canceler struct {
@@ -41,8 +40,7 @@ func (c *Canceler) CancelAll() error {
 		return err
 	}
 
-	r, _ := json.MarshalIndent(resp, "", "	")
-	log.Printf("%s", string(r))
+	helper.PrintIdent(resp)
 
 	return nil
 }

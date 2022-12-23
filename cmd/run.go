@@ -18,13 +18,16 @@ const (
 )
 
 var (
-	wsAddr   string
-	wsScheme string
-	pair     string
-	profit   float64
-	maker    float64
-	taker    float64
-	strategy uint8
+	wsAddr         string
+	wsScheme       string
+	pair           string
+	gridProfit     float64
+	maker          float64
+	taker          float64
+	strategy       uint8
+	smaOffset      float64
+	smaProfit      float64
+	smaOrderAmount float64
 )
 
 var runCmd = &cobra.Command{
@@ -40,42 +43,45 @@ var runCmd = &cobra.Command{
 			Debug:      verbose,
 			Account:    account,
 			Pair:       pair,
-			Profit:     profit,
-			MakerFee:   maker,
-			TakerFee:   taker,
 			WSScheme:   wsScheme,
 			WSAddr:     wsAddr,
 			APIKey:     apiKey,
 			APISecret:  apiSecret,
 			CustomerID: customerID,
-			Timeframe:  timeframe,
-			OHLCLimit:  ohlcLimit,
-			SMALength:  smaLenght,
 		}
-
-		// if sma or grid {
-
-		// }
 
 		var trader app.Trader
 		switch strategy {
 		case SMA:
 			trader = &app.SMATrader{
-				Config: config,
-				Order:  apiConn,
+				Ctx:            config,
+				OrderCreator:   apiConn,
+				OrderCanceller: apiConn,
+				PrivateGetter:  apiConn,
+				PublicGetter:   apiConn,
+				Timeframe:      timeframe,
+				OHLCLimit:      ohlcLimit,
+				Length:         smaLength,
+				Offset:         smaOffset,
+				Profit:         smaProfit,
+				Amount:         smaOrderAmount,
 			}
+
+			log.Printf("Starting SMA strategy, pair: %v, offset: %v, profit: %v, timeframe: %v", pair, smaOffset, smaProfit, smaLength)
 		case GRID:
 			trader = &app.GridTrader{
-				Config:       config,
+				Ctx:          config,
 				OrderCreator: apiConn,
+				Profit:       gridProfit,
+				MakerFee:     maker,
+				TakerFee:     taker,
 			}
+
+			log.Printf("Starting grid strategy, pair: %v, profit: %v", pair, gridProfit)
 		}
 
 		bot, err := app.NewBot(config, trader)
 		helper.HandleFatalError(err)
-
-		log.Printf("pair: %v, profit: %v", pair, profit)
-
 		helper.HandleFatalError(bot.Run())
 	},
 }
@@ -85,11 +91,14 @@ func init() {
 
 	runCmd.Flags().StringVar(&wsAddr, "ws-addr", "ws.bitstamp.net", "Bitstamp websocket address")
 	runCmd.Flags().StringVar(&wsScheme, "ws-scheme", "wss", "Bitstamp websocket scheme")
-	runCmd.Flags().Float64Var(&profit, "profit", 0.01, "Profit applied on each trade")
-	runCmd.Flags().Float64Var(&maker, "maker", 0.02, "Maker fee %")
-	runCmd.Flags().Float64Var(&taker, "taker", 0.03, "Taker fee %")
-	runCmd.Flags().IntVar(&timeframe, "step", 3600, "Source Timeframe in seconds. Possible options are 60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 259200")
-	runCmd.Flags().IntVar(&ohlcLimit, "limit", 1000, "Source Limit OHLC results (minimum: 1; maximum: 1000)")
-	runCmd.Flags().IntVar(&smaLenght, "length", 20, "SMA length")
+	runCmd.Flags().Float64Var(&gridProfit, "grid-profi", 0.01, "Grid trader profit in %")
+	runCmd.Flags().Float64Var(&maker, "maker", 0.04, "Maker fee %")
+	runCmd.Flags().Float64Var(&taker, "taker", 0.06, "Taker fee %")
+	runCmd.Flags().IntVar(&timeframe, "timeframe", 60, "Source Timeframe in seconds. Possible options are 60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 259200")
+	runCmd.Flags().IntVar(&ohlcLimit, "limit", 10, "Source Limit OHLC results (minimum: 1; maximum: 1000)")
 	runCmd.Flags().Uint8Var(&strategy, "type", 1, "1 - SMA; 2 - GRID;")
+	runCmd.Flags().IntVar(&smaLength, "sma-length", 8, "SMA length")
+	runCmd.Flags().Float64Var(&smaOffset, "sma-offset", 0.0003, "SMA trader offset")
+	runCmd.Flags().Float64Var(&smaProfit, "sma-profit", 0.0009, "SMA trader profit in cents")
+	runCmd.Flags().Float64Var(&smaOrderAmount, "amount", 0, "SMA trade order amount")
 }

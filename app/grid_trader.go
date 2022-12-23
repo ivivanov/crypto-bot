@@ -36,13 +36,16 @@ import (
 // USD base with profit = USD base - USD base * profit
 // buy price = USD base / buy USDT
 type GridTrader struct {
-	Config       *BotCtx
+	Ctx          *BotCtx
 	OrderCreator OrderCreator
+	Profit       float64
+	MakerFee     float64
+	TakerFee     float64
 }
 
 type OrderCreator interface {
-	PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.SellLimitOrder, error)
-	PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.BuyLimitOrder, error)
+	PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.SellLimitOrder, error)
+	PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.BuyLimitOrder, error)
 }
 
 // Must start in new routine
@@ -64,10 +67,10 @@ func (gt *GridTrader) Start(tradeC <-chan *response.MyTrade) {
 // Returns round number up to 5 decimal precision
 // start with buy USDT
 func (t *GridTrader) CalculateSellPrice(buyPrice, amount float64) float64 {
-	fee := (amount * t.Config.MakerFee) / 100
+	fee := (amount * t.MakerFee) / 100
 	totalUsdPaid := buyPrice*amount + fee
 	usdBaseSell := totalUsdPaid + fee
-	usdBaseSellProfit := usdBaseSell + (usdBaseSell*t.Config.Profit)/100
+	usdBaseSellProfit := usdBaseSell + (usdBaseSell*t.Profit)/100
 	sellPrice := usdBaseSellProfit / amount
 
 	return helper.Round5dec(sellPrice)
@@ -76,10 +79,10 @@ func (t *GridTrader) CalculateSellPrice(buyPrice, amount float64) float64 {
 // Returns round number up to 5 decimal precision
 // start with sell USDT
 func (t *GridTrader) CalculateBuyPrice(sellPrice, amount float64) float64 {
-	fee := (amount * t.Config.MakerFee) / 100
+	fee := (amount * t.MakerFee) / 100
 	totalUsdGain := sellPrice*amount - fee
 	usdBaseBuy := totalUsdGain - fee
-	usdBaseBuyProfit := usdBaseBuy - (usdBaseBuy*t.Config.Profit)/100
+	usdBaseBuyProfit := usdBaseBuy - (usdBaseBuy*t.Profit)/100
 	buyPrice := usdBaseBuyProfit / amount
 
 	return helper.Round5dec(buyPrice)
@@ -92,7 +95,7 @@ func (t *GridTrader) PostSellCounterTrade(trade *response.MyTrade) (*bsre.SellLi
 	}
 
 	sellPrice := t.CalculateSellPrice(price, trade.Amount())
-	resp, err := t.OrderCreator.PostSellLimitOrder(t.Config.Pair, helper.GetClientOrderID(t.Config.Account, sellPrice), trade.Amount(), sellPrice)
+	resp, err := t.OrderCreator.PostSellLimitOrder(t.Ctx.Pair, helper.GetClientOrderID(t.Ctx.Account, sellPrice), trade.Amount(), sellPrice)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +110,7 @@ func (t *GridTrader) PostBuyCounterTrade(trade *response.MyTrade) (*bsre.BuyLimi
 	}
 
 	buyPrice := t.CalculateBuyPrice(price, trade.Amount())
-	resp, err := t.OrderCreator.PostBuyLimitOrder(t.Config.Pair, helper.GetClientOrderID(t.Config.Account, buyPrice), trade.Amount(), buyPrice)
+	resp, err := t.OrderCreator.PostBuyLimitOrder(t.Ctx.Pair, helper.GetClientOrderID(t.Ctx.Account, buyPrice), trade.Amount(), buyPrice)
 	if err != nil {
 		return nil, err
 	}
