@@ -5,8 +5,15 @@ import (
 	"log"
 
 	bs "github.com/ivivanov/crypto-bot/bitstamp"
+	bsre "github.com/ivivanov/crypto-bot/bitstamp/response"
+
 	"github.com/ivivanov/crypto-bot/helper"
 )
+
+type OrderCreator interface {
+	PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.LimitOrder, error)
+	PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.LimitOrder, error)
+}
 
 type Preparer struct {
 	account            string

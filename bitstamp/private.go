@@ -153,7 +153,7 @@ func (c *Conn) PostCancelAllOrders(currencyPair string) (*response.CancelAllOrde
 	return res, nil
 }
 
-func (c *Conn) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*response.BuyLimitOrder, error) {
+func (c *Conn) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*response.LimitOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
 	v.Set("price", fmt.Sprint(price))
@@ -167,7 +167,7 @@ func (c *Conn) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, pri
 	if err != nil {
 		return nil, err
 	}
-	res := &response.BuyLimitOrder{}
+	res := &response.LimitOrder{}
 	err = json.Unmarshal(b, res)
 	if err != nil {
 		return nil, err
@@ -175,7 +175,7 @@ func (c *Conn) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, pri
 	return res, nil
 }
 
-func (c *Conn) PostBuyMarketOrder(currencyPair string, amount float64) (*response.BuyMarketOrder, error) {
+func (c *Conn) PostBuyMarketOrder(currencyPair string, amount float64) (*response.MarketOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
 	path := fmt.Sprintf("/v2/buy/market/%s/", currencyPair)
@@ -183,7 +183,7 @@ func (c *Conn) PostBuyMarketOrder(currencyPair string, amount float64) (*respons
 	if err != nil {
 		return nil, err
 	}
-	res := &response.BuyMarketOrder{}
+	res := &response.MarketOrder{}
 	err = json.Unmarshal(b, res)
 	if err != nil {
 		return nil, err
@@ -191,7 +191,7 @@ func (c *Conn) PostBuyMarketOrder(currencyPair string, amount float64) (*respons
 	return res, nil
 }
 
-func (c *Conn) PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*response.SellLimitOrder, error) {
+func (c *Conn) PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*response.LimitOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
 	v.Set("price", fmt.Sprint(price))
@@ -206,7 +206,7 @@ func (c *Conn) PostSellLimitOrder(currencyPair, clientOrderID string, amount, pr
 		return nil, err
 	}
 
-	res := &response.SellLimitOrder{}
+	res := &response.LimitOrder{}
 	err = json.Unmarshal(b, res)
 	if err != nil {
 		return nil, err
@@ -215,7 +215,7 @@ func (c *Conn) PostSellLimitOrder(currencyPair, clientOrderID string, amount, pr
 	return res, nil
 }
 
-func (c *Conn) PostSellMarketOrder(currencyPair string, amount float64) (*response.SellMarketOrder, error) {
+func (c *Conn) PostSellMarketOrder(currencyPair string, amount float64) (*response.MarketOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
 	path := fmt.Sprintf("/v2/sell/market/%s/", currencyPair)
@@ -223,7 +223,7 @@ func (c *Conn) PostSellMarketOrder(currencyPair string, amount float64) (*respon
 	if err != nil {
 		return nil, err
 	}
-	res := &response.SellMarketOrder{}
+	res := &response.MarketOrder{}
 	err = json.Unmarshal(b, res)
 	if err != nil {
 		return nil, err

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	bsresponse "github.com/ivivanov/crypto-bot/bitstamp/response"
+	bsre "github.com/ivivanov/crypto-bot/bitstamp/response"
 	"github.com/ivivanov/crypto-bot/helper"
 )
 
@@ -16,11 +16,11 @@ type PrepareOrdersCreatorMock struct {
 	expPrices       map[int]float64
 }
 
-func (ocm *PrepareOrdersCreatorMock) PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsresponse.SellLimitOrder, error) {
+func (ocm *PrepareOrdersCreatorMock) PostSellLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.LimitOrder, error) {
 	return nil, nil
 }
 
-func (ocm *PrepareOrdersCreatorMock) PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsresponse.BuyLimitOrder, error) {
+func (ocm *PrepareOrdersCreatorMock) PostBuyLimitOrder(currencyPair, clientOrderID string, amount float64, price float64) (*bsre.LimitOrder, error) {
 	if ocm.expPrices[ocm.i] != price {
 		return nil, fmt.Errorf("exp: %v, act: %v", ocm.expPrices[ocm.i], price)
 	}
@@ -44,7 +44,7 @@ func (ocm *PrepareOrdersCreatorMock) PostBuyLimitOrder(currencyPair, clientOrder
 
 	ocm.i++
 
-	return &bsresponse.BuyLimitOrder{
+	return &bsre.LimitOrder{
 		Price:         price,
 		Amount:        amount,
 		ClientOrderID: clientOrderID,

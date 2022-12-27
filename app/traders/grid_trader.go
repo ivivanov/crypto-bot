@@ -1,6 +1,7 @@
-package app
+package traders
 
 import (
+	"github.com/ivivanov/crypto-bot/app"
 	bsre "github.com/ivivanov/crypto-bot/bitstamp/response"
 	"github.com/ivivanov/crypto-bot/helper"
 
@@ -36,7 +37,7 @@ import (
 // USD base with profit = USD base - USD base * profit
 // buy price = USD base / buy USDT
 type GridTrader struct {
-	Ctx          *BotCtx
+	Ctx          *app.BotCtx
 	OrderCreator OrderCreator
 	Profit       float64
 	MakerFee     float64
@@ -44,8 +45,8 @@ type GridTrader struct {
 }
 
 type OrderCreator interface {
-	PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.SellLimitOrder, error)
-	PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.BuyLimitOrder, error)
+	PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.LimitOrder, error)
+	PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.LimitOrder, error)
 }
 
 // Must start in new routine
@@ -88,7 +89,7 @@ func (t *GridTrader) CalculateBuyPrice(sellPrice, amount float64) float64 {
 	return helper.Round5dec(buyPrice)
 }
 
-func (t *GridTrader) PostSellCounterTrade(trade *response.MyTrade) (*bsre.SellLimitOrder, error) {
+func (t *GridTrader) PostSellCounterTrade(trade *response.MyTrade) (*bsre.LimitOrder, error) {
 	price, err := helper.GetPriceFrom(trade.Data.ClientOrderID)
 	if err != nil {
 		return nil, err
@@ -103,7 +104,7 @@ func (t *GridTrader) PostSellCounterTrade(trade *response.MyTrade) (*bsre.SellLi
 	return resp, nil
 }
 
-func (t *GridTrader) PostBuyCounterTrade(trade *response.MyTrade) (*bsre.BuyLimitOrder, error) {
+func (t *GridTrader) PostBuyCounterTrade(trade *response.MyTrade) (*bsre.LimitOrder, error) {
 	price, err := helper.GetPriceFrom(trade.Data.ClientOrderID)
 	if err != nil {
 		return nil, err

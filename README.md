@@ -17,7 +17,7 @@ In case we hit market price (taker) when posting new order (trade_buy->create_se
 Examples in docs.
 
 ## Roadmap
-- do not cover the whole spectrum of the price fluctuations
+- (grid trader) do not cover the whole spectrum of the price fluctuations
     - trade around SMA and in case of period when stuck in usdt/usd use thether.
     - bollinger band for upper and lower bound
 - think of on/off ramp for usdt/usd

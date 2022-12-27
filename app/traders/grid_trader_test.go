@@ -1,10 +1,11 @@
-package app
+package traders
 
 import (
 	"encoding/json"
 	"testing"
 	"time"
 
+	"github.com/ivivanov/crypto-bot/app"
 	bsre "github.com/ivivanov/crypto-bot/bitstamp/response"
 	"github.com/ivivanov/crypto-bot/helper"
 	"github.com/ivivanov/crypto-bot/response"
@@ -13,8 +14,8 @@ import (
 type OrderCreatorMock struct {
 }
 
-func (ocm *OrderCreatorMock) PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.SellLimitOrder, error) {
-	return &bsre.SellLimitOrder{
+func (ocm *OrderCreatorMock) PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.LimitOrder, error) {
+	return &bsre.LimitOrder{
 		Price:         price,
 		Amount:        amount,
 		Type:          1,
@@ -24,8 +25,8 @@ func (ocm *OrderCreatorMock) PostSellLimitOrder(currencyPair, clientOrderID stri
 	}, nil
 }
 
-func (ocm *OrderCreatorMock) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.BuyLimitOrder, error) {
-	return &bsre.BuyLimitOrder{
+func (ocm *OrderCreatorMock) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*bsre.LimitOrder, error) {
+	return &bsre.LimitOrder{
 		Price:         price,
 		Amount:        amount,
 		Type:          0,
@@ -180,7 +181,7 @@ func TestPostSellCounterTrade(t *testing.T) {
 	} {
 		t.Run(tc.title, func(t *testing.T) {
 			trader := GridTrader{
-				Ctx:          &BotCtx{},
+				Ctx:          &app.BotCtx{},
 				MakerFee:     0.02,
 				OrderCreator: &OrderCreatorMock{},
 			}
@@ -249,7 +250,7 @@ func TestPostBuyCounterTrade(t *testing.T) {
 	} {
 		t.Run(tc.title, func(t *testing.T) {
 			trader := GridTrader{
-				Ctx: &BotCtx{},
+				Ctx:          &app.BotCtx{},
 				MakerFee:     0.02,
 				OrderCreator: &OrderCreatorMock{},
 			}

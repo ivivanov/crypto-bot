@@ -1,4 +1,4 @@
-package app
+package helper
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	bsresponse "github.com/ivivanov/crypto-bot/bitstamp/response"
 )
 
-//go:embed ohlc_test.json
+//go:embed ohlc_test_data.json
 var ohlcData string
 
 func TestSmaFrom(t *testing.T) {
@@ -33,7 +33,7 @@ func TestSmaFrom(t *testing.T) {
 		}
 	}
 
-	sma := smaFrom(20, ohlc, func(v bsresponse.OHLC) float64 { return v.Close })
+	sma := SMAFrom(20, ohlc, func(v bsresponse.OHLC) float64 { return v.Close })
 
 	if len(sma) != 1000 {
 		t.Error("unexpected value")

@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/ivivanov/crypto-bot/app"
+	"github.com/ivivanov/crypto-bot/app/traders"
 	"github.com/ivivanov/crypto-bot/bitstamp"
 	"github.com/ivivanov/crypto-bot/helper"
 	"github.com/spf13/cobra"
@@ -53,23 +54,20 @@ var runCmd = &cobra.Command{
 		var trader app.Trader
 		switch strategy {
 		case SMA:
-			trader = &app.SMATrader{
-				Ctx:            config,
-				OrderCreator:   apiConn,
-				OrderCanceller: apiConn,
-				PrivateGetter:  apiConn,
-				PublicGetter:   apiConn,
-				Timeframe:      timeframe,
-				OHLCLimit:      ohlcLimit,
-				Length:         smaLength,
-				Offset:         smaOffset,
-				Profit:         smaProfit,
-				Amount:         smaOrderAmount,
+			trader = &traders.SMATrader{
+				Ctx:       config,
+				ApiSMA:    apiConn,
+				Timeframe: timeframe,
+				OHLCLimit: ohlcLimit,
+				Length:    smaLength,
+				Offset:    smaOffset,
+				Profit:    smaProfit,
+				Amount:    smaOrderAmount,
 			}
 
 			log.Printf("Starting SMA strategy, pair: %v, offset: %v, profit: %v, timeframe: %v", pair, smaOffset, smaProfit, smaLength)
 		case GRID:
-			trader = &app.GridTrader{
+			trader = &traders.GridTrader{
 				Ctx:          config,
 				OrderCreator: apiConn,
 				Profit:       gridProfit,

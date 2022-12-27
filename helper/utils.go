@@ -70,23 +70,3 @@ func GetAccountFrom(clientOrderID string) (string, error) {
 
 	return split[0], nil
 }
-
-// Simple Moving Average (SMA).
-func Sma(period int, prices []float64) []float64 {
-	result := make([]float64, len(prices))
-	sum := float64(0)
-
-	for i, p := range prices {
-		count := i + 1
-		sum += p
-
-		if i >= period {
-			sum -= prices[i-period]
-			count = period
-		}
-
-		result[i] = sum / float64(count)
-	}
-
-	return result
-}
