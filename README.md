@@ -31,26 +31,10 @@ Examples in docs.
 - password protect .env
 
 ## TODOs
-- Tests for SMA trader
-    - simulate realtime data through channels
-    - mock cancel and new order
-    - create ohlc data to simulate volatile market (ohlc_test.json)
-    - send trades to tradeC
-
-- Live order book. Trading based on long pooling data of OHCL limits us. Maybe ...
-
 - in prepare add func for SMA prepare buy 
     - should create order based on current SMA and applied offset (SMA: 1, offset: 0.0001, buy price: 0.9999)
-- trader
-    - add func for PostSellTrade
-        - should create counter trade based on set profit (buy@ 0.9999, profit: 0.0002, sell price: 1.0001)
-    - add func which detects sell trade and prepare new buy order based on current SMA
-    - create test with predefined OHLC, calculated SMA and check whether on trade correct counter trade is created 
 - run cmd
     - rename to start
-    - flag for strategy name
-        - SMA
-        - Grid
     - optimal SMA strategy
         - ta.sma(close, 20) // 90+%
         - 1 hour timeframe
@@ -63,32 +47,18 @@ Examples in docs.
         - Calculate optimal offset
             - in trading view change chart to high low. Zoom in. Now you see every candle high low. Simple algorithm to calculate the average difference will give optimal offset
 
-- keep in mind that SMA is moving and opened order may never hit. During dip you open new order on the bottom. Instead of waiting to execute it you have to reopen every time SMA moved. That way you guarantee more trades and being always in range.
-- order updater
-    - run on specific interval (flag for timespan: 1h, 2h, 30min,...)
-    - calculate the new SMA
-    - pull orders
-        - if we have buy orders check their current price and act based on SMA
-        - if we have only sell orders - do nothing
-
-- integrate SMA
-    - trade around SMA
-    - good to do some refactoring(grid strategy, SMA strat, etc...)
-    - do not put the whole stack in trade. 
-        - Start multiple bots with different configs
-        - start 
+- do not put the whole stack in trade. 
+    - Start multiple bots with different configs
 - add min order check $10 (flag because bs, kraken)
 - do not post orders below min order size
 - prepare - auto get balance when balance flag is omitted
 
 - backtesting
-    - test fixed range
-    - trading around SMA (tested - ttyy script)
+    - test fixed range (do not consider SMA)
     - try testing arb on 2 charts
 
-- make ctx struct
-    - add configured logger
-    - remove date & add ms
+- add configured logger
+- remove date & add ms
 
 - concurrent http requests - nonce loses order due to unknown routine execution order
     - test again UUID - last time could be expired/blocked api keys - regen just in case
