@@ -7,6 +7,7 @@ var (
 	ErrAuthRequired = errors.New("Authentication Required")
 )
 
+// todo remove
 var CurrencyPairs = []string{
 	"btcusd",
 	"btceur",

@@ -1,0 +1,13 @@
+[Unit]
+Description=Crypto-Bot test600
+
+[Service]
+User=ivanttyy
+WorkingDirectory=/home/ivanttyy/.crypto-bot/test600
+ExecStart=/usr/local/bin/crypto-bot run --type 2 --pair euroceur --maker 0.0 --taker 0.0 --grid-profit 0.04
+Restart=always
+StandardOutput=append:/var/log/test600/out.log
+StandardError=append:/var/log/test600/error.log
+
+[Install]
+WantedBy=multi-user.target

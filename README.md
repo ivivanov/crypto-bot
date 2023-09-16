@@ -30,7 +30,15 @@ Examples in docs.
     - when fees are low
 - password protect .env
 
-## TODOs
+## TODO
+- 
+- add min order check $10 (flag because bs, kraken)
+- do not post orders below min order size
+- add verbose log
+- add configured logger
+- remove date & add ms
+- crete service. Auto restart?
+
 - in prepare add func for SMA prepare buy 
     - should create order based on current SMA and applied offset (SMA: 1, offset: 0.0001, buy price: 0.9999)
 - run cmd
@@ -49,16 +57,12 @@ Examples in docs.
 
 - do not put the whole stack in trade. 
     - Start multiple bots with different configs
-- add min order check $10 (flag because bs, kraken)
-- do not post orders below min order size
+
 - prepare - auto get balance when balance flag is omitted
 
 - backtesting
     - test fixed range (do not consider SMA)
     - try testing arb on 2 charts
-
-- add configured logger
-- remove date & add ms
 
 - concurrent http requests - nonce loses order due to unknown routine execution order
     - test again UUID - last time could be expired/blocked api keys - regen just in case

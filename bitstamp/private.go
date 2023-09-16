@@ -156,7 +156,7 @@ func (c *Conn) PostCancelAllOrders(currencyPair string) (*response.CancelAllOrde
 func (c *Conn) PostBuyLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*response.LimitOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
-	v.Set("price", fmt.Sprint(price))
+	v.Set("price", fmt.Sprintf("%.4f", price))
 
 	if clientOrderID != "" {
 		v.Set("client_order_id", fmt.Sprint(clientOrderID))
@@ -194,7 +194,7 @@ func (c *Conn) PostBuyMarketOrder(currencyPair string, amount float64) (*respons
 func (c *Conn) PostSellLimitOrder(currencyPair, clientOrderID string, amount, price float64) (*response.LimitOrder, error) {
 	v := url.Values{}
 	v.Set("amount", fmt.Sprint(amount))
-	v.Set("price", fmt.Sprint(price))
+	v.Set("price", fmt.Sprintf("%.4f", price))
 
 	if clientOrderID != "" {
 		v.Set("client_order_id", fmt.Sprint(clientOrderID))

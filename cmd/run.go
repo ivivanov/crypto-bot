@@ -75,7 +75,7 @@ var runCmd = &cobra.Command{
 				TakerFee:     taker,
 			}
 
-			log.Printf("Starting grid strategy, pair: %v, profit: %v", pair, gridProfit)
+			log.Printf("Starting grid strategy, pair: %v, profit: %v%%", pair, gridProfit)
 		}
 
 		bot, err := app.NewBot(config, trader)
@@ -89,7 +89,7 @@ func init() {
 
 	runCmd.Flags().StringVar(&wsAddr, "ws-addr", "ws.bitstamp.net", "Bitstamp websocket address")
 	runCmd.Flags().StringVar(&wsScheme, "ws-scheme", "wss", "Bitstamp websocket scheme")
-	runCmd.Flags().Float64Var(&gridProfit, "grid-profi", 0.01, "Grid trader profit in %")
+	runCmd.Flags().Float64Var(&gridProfit, "grid-profit", 0.01, "Grid trader profit in %")
 	runCmd.Flags().Float64Var(&maker, "maker", 0.04, "Maker fee %")
 	runCmd.Flags().Float64Var(&taker, "taker", 0.06, "Taker fee %")
 	runCmd.Flags().IntVar(&timeframe, "timeframe", 60, "Source Timeframe in seconds. Possible options are 60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 259200")
